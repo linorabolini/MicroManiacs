@@ -3,29 +3,34 @@
 require.config({
     baseUrl: 'js',
     paths: {
-        // libs
+    // libs
         'jquery': 'libs/jquery-2.1.0.min',
         'underscore': 'libs/underscore-min',
         'datgui': 'libs/dat.gui',
         'fishbone' : 'libs/fishbone',
         'three' : 'libs/three.min',
 
-        // src
+    //src
+        // models
         'Time': 'src/Time',
-        'BaseObject' : 'src/BaseObject',
-        'Level' : 'src/Level',
-        'app': 'src/app'
+        'BaseObject' : 'src/models/BaseObject',
+        'LevelModel' : 'src/models/LevelModel',
+        'LevelScreen' : 'src/models/LevelScreen',
+
+        // views
+        'LevelViewport' : 'src/views/LevelViewport',
+        'APP': 'src/app'
     }
 });
 
-require(['jquery', 'app', 'datgui'],
-    function ($, App) {
+require(['jquery', 'APP', 'datgui'],
+    function ($, APP) {
 
         // component setup
         //==============================================
 
-        var app = new App();
-        app.setup();
+        
+        APP.setup();
 
         // main loop config
         //==============================================
@@ -39,7 +44,7 @@ require(['jquery', 'app', 'datgui'],
             dt *= 0.001;
 
             // update elements
-            app.update(dt);
+            APP.update(dt);
 
             window.requestAnimationFrame(step);
         }

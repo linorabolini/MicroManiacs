@@ -2,38 +2,29 @@ define(function (require) {
     'use strict';
 
     var BaseObject = require('BaseObject'),
-        Level = require('Level');
+        LevelScreen = require('LevelScreen');
 
-    return BaseObject.extend({
+    var APP = BaseObject.extend({
 
         // variables
 
-        level: null,
+        currentScreen: null,
 
         // functions
 
-        init: function () {
-            this.__init();
-            console.log("App Init.");
-            this.on("message", this.handleMessage);
-        },
         setup: function () {
-            console.log("App Setup.");
+            console.log("App Init.");
 
-            // main loop config
+            var level = new LevelScreen(null);
+            this.setScreen(level);
+        },
+        setScreen: function (newScreen) {
+            this.screen && this.removeChild(this.screen).dispose();
 
-            this.level = new Level();
-            this.level.setup();
-            this.addChild(this.level);
-        },
-        handleMessage: function (message) {
-            console.log(message);
-        },
-        update: function (dt) {
-            this.__update(dt);
-        },
-        dispose: function () {
-            this.__dispose();
+            this.screen = newScreen;
+            this.addChild(this.screen);
         }
     });
+
+    return new APP();
 });
