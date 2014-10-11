@@ -4,6 +4,7 @@ define(function (require){
 		LevelModel = require('LevelModel'),
 		LevelViewport = require('LevelViewport');
 
+
 	return BaseObject.extend({
 
 		// variables
@@ -13,15 +14,20 @@ define(function (require){
 
 		// functions
 
-		init: function (levelConfig) {
+		init: function (data) {
 			this.__init();
 			console.log("level screen setup.");
 
-			this.viewport = new LevelViewport();
-			this.level = new LevelModel(this.viewport, levelConfig);
+			// create level from scene data
+			this.level = new LevelModel();
+			this.level.generateFromSceneData(data);
 
+			// create a new viewport to render the level
+			this.viewport = new LevelViewport();
+			this.viewport.startRendering(this.level);
 			this.viewport.addToScreen();
 
+			// add elements to the update loop
 			this.addChild(this.level);
 			this.addChild(this.viewport);
 		}

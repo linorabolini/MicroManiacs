@@ -4,11 +4,14 @@ define(function (require){
         THREE = require('three');
 
 
-    // messages
-    var INPUT = 0,
-        START = 1,
-        ADD_OBJECT = 2,
-        REMOVE_OBJECT = 3;
+    //  WORKER SHARED MESSAGES
+
+    var WORKER = {
+        INPUT:0,
+        START:1,
+        ADD_OBJECT:2,
+        REMOVE_OBJECT:3
+    };
 
     return BaseObject.extend({
 
@@ -16,34 +19,75 @@ define(function (require){
 
         physicsWorker: null,
         renderObjects: null,
-        view: null,
+        scene: null,
+        camera: null,
+
 
         // functions
 
-        init: function (view, levelConfig) {
+        init: function () {
             this.__init();
 
-            this.view = view;
-            this.view.model = this;
-
-            this.setupWorker();
             this.renderObjects = [];
-            // this.loadPlayers();
+        },
+        generateFromSceneData: function (data) {
+            // setup the physical world
+            this.setupWorker();
 
-            var levelObject = this.view.scene.getObjectByName("LEVEL");
+            // create a new scene info from data
+            var loader = new THREE.ObjectLoader();
+            this.scene = loader.parse(data);
 
+            this.loadCameraFromSceneData(this.scene);
+
+            // load static objects
+            this.loadStaticObjectsFromSceneData(this.scene);
+
+            // load spawn areas
+            // TODO THIS
+            //
+        },
+        loadCameraFromSceneData: function (sceneData) {
+            this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+            var cameraData = sceneData.getObjectByName("CAMERA");
+            var pos = cameraData.getObjectByName("POSITION");
+            var target = cameraData.getObjectByName("TARGET");
+    
+            this.camera.position.copy(pos.position);
+            this.camera.lookAt(target.position);
+        },
+        loadStaticObjectsFromSceneData: function (sceneData) {
+            // load objects from LEVEL layer
+            var levelObject = sceneData.getObjectByName("LEVEL");
             var len = levelObject.children.length;
+
             for (var i = 0; i < len; i++) {
-                var cube = levelObject.children[i];
-                //this.view.scene.add( cube );
-                if(i!=2)cube.mass = 1;
-                this.renderObjects.push(cube);
-                this.createPhysicalObject(cube);
+                var object = levelObject.children[i];
+
+                // custom object data
+                i == 0 && (object.mass = 1);
+
+                // track object
+                // this.scene.add(object);             // visualy
+                this.renderObjects.push(object);    // logicaly
+                this.createPhysicalObject(object);  // physicaly
             };
-
-
         },
         createPhysicalObject: function (mesh) {
+            var serializedMesh = this.serializeMesh(mesh);
+
+            this.physicsWorker.postMessage({
+                type: WORKER.ADD_OBJECT,
+                object: serializedMesh
+            });
+        },
+        serializeMesh: function (mesh) {
+
+            // serialize the mesh params to pass them to the
+            // physics worker. All serialization should be done 
+            // here.
+
             var object = [];
             var origin = mesh.position;
             object[0] = origin.x;
@@ -61,17 +105,14 @@ define(function (require){
             var mass = mesh.mass || 0;
             object[10] = mass;
 
-            this.physicsWorker.postMessage({
-                type: ADD_OBJECT,
-                object: object
-            });
+            return object;
         },
         setupWorker: function () {
             // Worker
             this.physicsWorker = new Worker('./js/src/physicsWorker.js');
             this.physicsWorker.onmessage = this.handlePhysicsMessage;
             this.physicsWorker.postMessage({
-                type: START
+                type: WORKER.START
             });
         },
         handlePhysicsMessage: function (event) {
