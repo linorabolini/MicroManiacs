@@ -2,7 +2,11 @@ define(function (require) {
     'use strict';
 
     var BaseObject = require('BaseObject'),
-        LevelScreen = require('LevelScreen');
+        LevelScreen = require('LevelScreen'),
+        // TODO: create level manager
+        LevelManager = require('LevelManager');
+
+
 
     var APP = BaseObject.extend({
 
@@ -15,7 +19,7 @@ define(function (require) {
         setup: function () {
             console.log("App Init.");
 
-            var level = new LevelScreen(null);
+            var level = new LevelScreen(LevelManager[0]);
             this.setScreen(level);
         },
         setScreen: function (newScreen) {
