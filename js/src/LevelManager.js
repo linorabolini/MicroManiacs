@@ -11,7 +11,7 @@ define(function(require){
 		LEVELS = [];
 
 	for (var i = 1; i <= numLevels; i++) {
-		var levelName = "LEVEL_" + i;
+		var levelName = "level_" + i;
 		$.getJSON(levelsPath + levelName + ".js", function(data) {
 			LEVELS.push(data);
 		});
