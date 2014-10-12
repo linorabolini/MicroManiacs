@@ -30,7 +30,6 @@ var bodies = [];
 //   //bodies.push(body);
 // })();
 
-
 function startUp(data) {
 
   // create the initial static level
@@ -43,7 +42,10 @@ function startUp(data) {
   var last = Date.now();
   function mainLoop() {
     var now = Date.now();
-    simulate(now - last);
+
+    // UPDATE !
+    update(now - last);
+
     last = now;
   }
   setInterval(mainLoop, 1000/60);
@@ -55,13 +57,17 @@ function addObject(data) {
   // default transform
   var startTransform = new Ammo.btTransform();
   startTransform.setIdentity();
+
+  // POSITION
   startTransform.setOrigin(new Ammo.btVector3(object[0], object[1], object[2]));
+
+  // ROTATION
   startTransform.setRotation(new Ammo.btQuaternion(object[3], object[4], object[5], object[6]));
 
-  // set mass
+  // MASS
   var mass = object[10]; // default
 
-  // shape
+  // SIZE
   var shape = new Ammo.btBoxShape(new Ammo.btVector3(object[7] * 0.5, object[8] * 0.5, object[9] * 0.5));
 
   // calculate local inertia
@@ -93,7 +99,7 @@ function readBulletObject(i, object) {
   object[6] = rotation.w();
 }
 
-function simulate(dt) {
+function update(dt) {
   dt = dt || 1;
 
   dynamicsWorld.stepSimulation(dt, 4);
@@ -141,6 +147,3 @@ onmessage = function(event) {
         postMessage("message arrived");
   }
 }
-
-console.log(Ammo);
-

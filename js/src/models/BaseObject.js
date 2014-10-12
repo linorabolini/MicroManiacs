@@ -38,6 +38,7 @@ define(function (require) {
             };
 
             this.children = [];
+            isDisposed = true;
         },
         update: function (dt) {
             for (var i = this.children.length - 1; i >= 0; i--) {

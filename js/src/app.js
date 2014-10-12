@@ -6,8 +6,6 @@ define(function (require) {
         // TODO: create level manager
         LevelManager = require('LevelManager');
 
-
-
     var APP = BaseObject.extend({
 
         // variables

@@ -66,10 +66,10 @@ define(function (require){
                 var object = levelObject.children[i];
 
                 // custom object data
-                i == 0 && (object.mass = 1);
+                i == 0 && (object.mass = 1); // TODO: SACAR ESTO
 
                 // track object
-                // this.scene.add(object);             // visualy
+                // this.scene.add(object);          // visualy
                 this.renderObjects.push(object);    // logicaly
                 this.createPhysicalObject(object);  // physicaly
             };
@@ -110,12 +110,12 @@ define(function (require){
         setupWorker: function () {
             // Worker
             this.physicsWorker = new Worker('./js/src/physicsWorker.js');
-            this.physicsWorker.onmessage = this.handlePhysicsMessage;
+            this.physicsWorker.onmessage = this.onmessage;
             this.physicsWorker.postMessage({
                 type: WORKER.START
             });
         },
-        handlePhysicsMessage: function (event) {
+        onmessage: function (event) {
             var data = event.data;
 
             switch(data.type) {

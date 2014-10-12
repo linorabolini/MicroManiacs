@@ -7,8 +7,6 @@ define(function (require){
 
 		// variables
 
-		scene: null,
-		camera: null,
 		renderer: null,
 		model: null,
 
