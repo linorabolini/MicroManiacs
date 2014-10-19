@@ -1,8 +1,9 @@
 define(function (require){
     
     var BaseObject = require('BaseObject'),
-        THREE = require('three');
-
+        THREE = require('three'),
+        fileManager = require('fileManager'),
+        Utils = require('utils');
 
     //  WORKER SHARED MESSAGES
 
@@ -10,25 +11,35 @@ define(function (require){
         INPUT:0,
         START:1,
         ADD_OBJECT:2,
-        REMOVE_OBJECT:3
+        REMOVE_OBJECT:3,
+        CREATE_CAR: 4,
+        SIMULATION_DATA: 5
     };
+
+    // SCALE
+    var SCALE = 10;
 
     return BaseObject.extend({
 
         // variables
 
         physicsWorker: null,
-        renderObjects: null,
+        bodies: null,
         scene: null,
         camera: null,
-
+        spawners: null,
+        vehicles: null,
+        wheels: null,
 
         // functions
 
         init: function () {
             this.__init();
 
-            this.renderObjects = [];
+            this.bodies = [];
+            this.spawners = [];
+            this.vehicles = [];
+            this.wheels = [];
         },
         generateFromSceneData: function (data) {
             // setup the physical world
@@ -38,17 +49,145 @@ define(function (require){
             var loader = new THREE.ObjectLoader();
             this.scene = loader.parse(data);
 
+            // load camera
             this.loadCameraFromSceneData(this.scene);
 
             // load static objects
             this.loadStaticObjectsFromSceneData(this.scene);
 
             // load spawn areas
-            // TODO THIS
+            this.loadSpawnersFromSceneData(this.scene);
+
+            // TODO THIS: vehicles have to be created at the start and 
+            // upon connection of new controllers
+
+                // create a sample vehicle
+                var playerData = {
+                    id: 3,
+                    vehicleID: 1
+                };
+                this.addPlayer(playerData);
             //
         },
+        addPlayer: function (playerData) {
+
+            var spawner = this.getFreeSpawner();
+            var spawnerData = this.serializeObject3D(spawner);
+
+            var loader = new THREE.ObjectLoader();
+            var chasis = loader.parse(fileManager.CHASIS[0]);
+
+
+            var chasisData = this.serializeMesh(chasis);
+            chasisData[10] = 50;
+
+            var dx = 0.9;
+            var dy = 0.4;
+            var dzBack = 2;
+            var dzFront = 2;
+
+            var radius = 0.5;
+
+            var data = {
+
+                "vehicleID" : playerData.vehicleID,
+
+                "spawnData" : spawnerData,
+
+                "chasisData": chasisData,
+
+                "wheels" : [
+
+                    {
+                        "isFrontWheel"  : true,
+                        "mirrored"      : false,
+
+                        "wheelRadius"           : radius,
+                        "suspensionRestLength"  : 0.25,
+
+                        "connectionPoint"   : [ -dx, -dy, dzFront ],
+                        "wheelDirection"    : [ 0, -1, 0 ],
+                        "wheelAxle"         : [ -1, 0, 0 ],
+
+                        "tuning" : {
+                            "rollInfluence" : 0.1,
+                        }
+                    },
+
+                    {
+                        "isFrontWheel"  : true,
+                        "mirrored"      : true,
+
+                        "wheelRadius"           : radius,
+                        "suspensionRestLength"  : 0.25,
+
+                        "connectionPoint"   : [ dx, -dy, dzFront ],
+                        "wheelDirection"    : [ 0, -1, 0 ],
+                        "wheelAxle"         : [ -1, 0, 0 ],
+
+                        "tuning" : {
+                            "rollInfluence" : 0.1,
+                        }
+
+                    },
+
+                    {
+                        "isFrontWheel"  : false,
+                        "mirrored"      : false,
+
+                        "wheelRadius"           : radius,
+                        "suspensionRestLength"  : 0.25,
+
+                        "connectionPoint"   : [ -dx, -dy, -dzBack ],
+                        "wheelDirection"    : [ 0, -1, 0 ],
+                        "wheelAxle"         : [ -1, 0, 0 ]
+
+                    },
+
+                    {
+                        "mirrored"      : true,
+                        "isFrontWheel"  : false,
+
+                        "wheelRadius"           : radius,
+                        "suspensionRestLength"  : 0.25,
+
+                        "connectionPoint"   : [ dx, -dy, -dzBack ],
+                        "wheelDirection"    : [ 0, -1, 0 ],
+                        "wheelAxle"         : [ -1, 0, 0 ]
+                    }
+
+                ],
+
+                "maxSuspensionTravelCm" : 750.0,
+                "maxSuspensionForce"    : 6000.0,
+                "suspensionStiffness"   : 10.0,
+                "suspensionCompression" : 20.83,
+                "suspensionDamping"     : 0.88,
+                "rollInfluence"         : 0.1,
+                "frictionSlip"          : 1
+
+            }
+
+            this.physicsWorker.postMessage({
+                type: WORKER.CREATE_CAR,
+                data: data
+            });
+
+            this.scene.add(chasis);
+            this.bodies.push(chasis);
+
+            // wheels
+
+            for (var i = 0; i < 4; i++) {
+                var wheel = loader.parse(fileManager.WHEELS[0]);
+                this.scene.add(wheel);
+                this.wheels.push(wheel);
+            };
+
+            this.vehicles.push(playerData);
+        },
         loadCameraFromSceneData: function (sceneData) {
-            this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+            this.camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
 
             var cameraData = sceneData.getObjectByName("CAMERA");
             var pos = cameraData.getObjectByName("POSITION");
@@ -65,78 +204,141 @@ define(function (require){
             for (var i = 0; i < len; i++) {
                 var object = levelObject.children[i];
 
-                // custom object data
-                i == 0 && (object.mass = 1); // TODO: SACAR ESTO
-
                 // track object
-                // this.scene.add(object);          // visualy
-                this.renderObjects.push(object);    // logicaly
+                this.bodies.push(object);    // logicaly
                 this.createPhysicalObject(object);  // physicaly
             };
+        },
+        loadSpawnersFromSceneData: function (sceneData) {
+            // load objects from SPAWNERS layer
+            var spawnersObject = sceneData.getObjectByName("SPAWNERS");
+            this.spawners = spawnersObject.children;
         },
         createPhysicalObject: function (mesh) {
             var serializedMesh = this.serializeMesh(mesh);
 
             this.physicsWorker.postMessage({
                 type: WORKER.ADD_OBJECT,
-                object: serializedMesh
+                data: serializedMesh
             });
+
+            return serializedMesh;
+        },
+        getFreeSpawner: function() {
+            return Utils.getRandom(this.spawners);
         },
         serializeMesh: function (mesh) {
 
             // serialize the mesh params to pass them to the
-            // physics worker. All serialization should be done 
-            // here.
+            // physics worker.
 
+            var offset = 0;
             var object = [];
-            var origin = mesh.position;
-            object[0] = origin.x;
-            object[1] = origin.y;
-            object[2] = origin.z;
-            var rotation = mesh.quaternion;
-            object[3] = rotation.x;
-            object[4] = rotation.y;
-            object[5] = rotation.z;
-            object[6] = rotation.w;
-            var size = mesh.geometry.parameters;
-            object[7] = size.width;
-            object[8] = size.height;
-            object[9] = size.depth;
-            var mass = mesh.mass || 0;
-            object[10] = mass;
+
+            offset = this.serializePosition(mesh, object, offset);
+            offset = this.serializeRotation(mesh, object, offset);
+            offset = this.serializeBoxSize(mesh, object, offset);
+
+            console.log(mesh)
+            object[offset] = mesh.userData.mass !== undefined ? mesh.userData.mass : 1;
 
             return object;
         },
+        serializeObject3D: function (mesh) {
+
+            // serialize an Object 3d
+
+            var offset = 0;
+            var object = [];
+
+            offset = this.serializePosition(mesh, object, offset);
+            offset = this.serializeRotation(mesh, object, offset);
+
+            return object;
+        },
+        serializePosition: function(obj, array, offset) {
+            var origin = obj.position;
+            array[offset] = origin.x / SCALE;
+            array[offset+1] = origin.y / SCALE;
+            array[offset+2] = origin.z / SCALE;
+
+            return offset + 3;
+        },
+        serializeRotation: function(obj, array, offset) {
+            var rotation = obj.quaternion;
+            array[offset] = rotation.x;
+            array[offset+1] = rotation.y;
+            array[offset+2] = rotation.z;
+            array[offset+3] = rotation.w;
+
+            return offset + 4;
+        },
+        serializeBoxSize: function(obj, array, offset) {
+            var size = obj.geometry.parameters;
+            array[offset] = size.width / SCALE;
+            array[offset+1] = size.height / SCALE;
+            array[offset+2] = size.depth / SCALE;
+
+            return offset + 3;
+        },
         setupWorker: function () {
             // Worker
-            this.physicsWorker = new Worker('./js/src/physicsWorker.js');
+            this.physicsWorker = new Worker('./js/src/physics/worker.js');
             this.physicsWorker.onmessage = this.onmessage;
             this.physicsWorker.postMessage({
                 type: WORKER.START
             });
         },
         onmessage: function (event) {
-            var data = event.data;
+            var message = event.data;
 
-            switch(data.type) {
+            switch(message.type) {
+                case WORKER.SIMULATION_DATA:
+                    this.updateWorldWithSimulationData(message.data);
+                    break;
                 default:
-              }
-            
-            for (var i = 0; i < data.objects.length; i++) {
-                  var physicsObject = data.objects[i];
-                  var renderObject = this.renderObjects[i];
-                  renderObject.position.x = physicsObject[0];
-                  renderObject.position.y = physicsObject[1];
-                  renderObject.position.z = physicsObject[2];
-
-                  renderObject.quaternion.x = physicsObject[3];
-                  renderObject.quaternion.y = physicsObject[4];
-                  renderObject.quaternion.z = physicsObject[5];
-                  renderObject.quaternion.w = physicsObject[6];
             }
+
+            this.physicsWorker.postMessage({
+                type: WORKER.INPUT
+            });
+        },
+        updateWorldWithSimulationData: function (data) {
+            var offset = 0;
+
+            offset = this.updateObjectFromData(data, offset, this.bodies);
+            offset = this.updateObjectFromData(data, offset, this.wheels);
+        },
+        updateObjectFromData: function (data, offset, array) {
+            //bodies
+            for (var i = 0; i < array.length; i++) {
+                var body = array[i];
+                body.position.x = data[offset] * SCALE;
+                body.position.y = data[offset+1] * SCALE;
+                body.position.z = data[offset+2] * SCALE;
+
+                body.quaternion.x = data[offset+3];
+                body.quaternion.y = data[offset+4];
+                body.quaternion.z = data[offset+5];
+                body.quaternion.w = data[offset+6];
+
+                offset += 7;
+            }
+
+            return offset;
         },
         dispose: function () {
             if (physicsWorker) physicsWorker.terminate();
+
+            physicsWorker = null;
+            this.vehicles = null;
+            bodies = null;
+            scene = null;
+            camera = null;
+            spawners = null;
+            vehicles = null;
+            wheels = null;
+
             this.__dispose();
         }
     });

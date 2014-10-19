@@ -22,7 +22,7 @@ define(function (require){
 			var scope = this;
 
 			// setup renderer
-			this.renderer = new THREE.WebGLRenderer();
+			this.renderer = new THREE.WebGLRenderer( { contextAttributes: { antialias: false } } );
 			this.renderer.setClearColor(0xfefefe, 1);
 			this.renderer.setSize( window.innerWidth, window.innerHeight );
 			window.onresize = function() {
