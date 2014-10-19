@@ -63,7 +63,7 @@ define(function (require){
                 }
                 return code;
             }
-            
+
             var scope = this;
 
             window.onkeydown = function (event) {
