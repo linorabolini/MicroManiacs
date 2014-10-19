@@ -18,6 +18,7 @@ define(function (require){
 
     // SCALE
     var SCALE = 10;
+    var PERSPECTIVE_CAMERA = false;
 
     return BaseObject.extend({
 
@@ -40,6 +41,57 @@ define(function (require){
             this.spawners = [];
             this.vehicles = [];
             this.wheels = [];
+
+
+            function getKeyCode(key) {
+                var code;
+                switch (event.keyCode) {
+                    case 38:
+                        code = "up";
+                        break;
+                    case 40:
+                        code = "down";
+                        break;
+                    case 37:
+                        code = "left";
+                        break;
+                    case 39:
+                        code = "right";
+                        break;
+                    default:
+                        code = ""
+                }
+                return code;
+            }
+            
+            var scope = this;
+
+            window.onkeydown = function (event) {
+
+                var code = getKeyCode(event.keyCode);
+
+                scope.physicsWorker.postMessage({
+                    type: WORKER.INPUT,
+                    data: {
+                        id: 0,
+                        status: true,
+                        code: code
+                    }
+                });
+            };
+            window.onkeyup = function (event) {
+
+                var code = getKeyCode(event.keyCode);
+
+                scope.physicsWorker.postMessage({
+                    type: WORKER.INPUT,
+                    data: {
+                        id: 0,
+                        status: false,
+                        code: code
+                    }
+                });
+            };
         },
         generateFromSceneData: function (data) {
             // setup the physical world
@@ -187,7 +239,15 @@ define(function (require){
             this.vehicles.push(playerData);
         },
         loadCameraFromSceneData: function (sceneData) {
-            this.camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
+
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+
+            if (PERSPECTIVE_CAMERA) { 
+                this.camera = new THREE.PerspectiveCamera( 70, w / h, 1, 1000 );
+            } else {
+                this.camera = new THREE.OrthographicCamera( -w/2, w/2, h/2, -h/2, 1, 1000 );
+            }
 
             var cameraData = sceneData.getObjectByName("CAMERA");
             var pos = cameraData.getObjectByName("POSITION");
@@ -298,10 +358,6 @@ define(function (require){
                     break;
                 default:
             }
-
-            this.physicsWorker.postMessage({
-                type: WORKER.INPUT
-            });
         },
         updateWorldWithSimulationData: function (data) {
             var offset = 0;

@@ -18,6 +18,20 @@ var bodies = [];
 var vehicles = [];
 var bodiesMap = {};
 
+var keys = [];
+
+var ENGINE_FORCE = 200;
+var STEERING = 0.3;
+
+function Keys() {
+  return {
+    "up":false,
+    "down": false,
+    "left": false,
+    "right":false
+  }
+}
+
 function startUp(data) {
   // create the initial static level
   if(data && data.staticBodies) {
@@ -136,6 +150,7 @@ function createVehicle( data ) {
 
   dynamicsWorld.addVehicle(vehicle);
   vehicles.push(vehicle);
+  keys.push(new Keys());
 
   return vehicle;
 
@@ -158,6 +173,7 @@ function setSteering( steering, vehicleId, wheelId ) {
     for ( var i = 0, il = vehicle.getNumWheels(); i < il; i ++ ) {
       vehicle.setSteeringValue( steering, i );
     }
+  } else {
     vehicle.setSteeringValue( steering, wheelId );
   }
 }
@@ -239,14 +255,45 @@ function readBulletObject( i, data, offset ) {
 
 }
 
+function setVehicleKey (id, code, status) {
+  keys[id][code] = status;
+}
+
+function getVehicleKey (id, code) {
+  return keys[id][code];
+}
+
 function handleInput (input) {
-  applyEngineForce(-200,0);
+  setVehicleKey(input.id, input.code, input.status);
+}
+
+function updateVehicles () {
+
+  for (var i = 0, il = vehicles.length; i < il ; i++) {
+
+    var up = getVehicleKey(i, "up");
+    var down = getVehicleKey(i, "down");
+    var value = (!!up - !!down);
+
+    applyEngineForce(value * ENGINE_FORCE, i, 2);
+    applyEngineForce(value * ENGINE_FORCE, i, 3);
+
+    var left = getVehicleKey(i, "left");
+    var right = getVehicleKey(i, "right");
+    var value = (!!left - !!right);
+
+    setSteering(value * STEERING, i, 0);
+    setSteering(value * STEERING, i, 1);
+
+  };
+
 }
 
 function update(dt) {
 
   dt = dt || 1;
   dynamicsWorld.stepSimulation(dt, 1);
+  updateVehicles();
 
   var message = { 
     type: SIMULATION_DATA, 
