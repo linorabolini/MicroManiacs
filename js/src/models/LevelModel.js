@@ -17,7 +17,7 @@ define(function (require){
     };
 
     // SCALE
-    var SCALE = 10;
+    var SCALE = 25; // MORE SCALE -> MORE SPEED
     var PERSPECTIVE_CAMERA = false;
 
     return BaseObject.extend({
@@ -111,7 +111,7 @@ define(function (require){
 
             chasis.position.copy(spawner.position);
             chasis.rotation.copy(spawner.rotation);
-            
+
             var chasisData = this.serializeMesh(chasis);
 
             this.scene.add(chasis);
@@ -128,12 +128,13 @@ define(function (require){
                 this.wheels.push(wheel);
             };
 
-            var dx = 0.9;
-            var dy = 0.4;
-            var dzBack = 2;
-            var dzFront = 2;
+            var ratio = SCALE / 10;
+            var dx = 0.9 / ratio;
+            var dy = 0.4 / ratio;
+            var dzBack = 2 / ratio;
+            var dzFront = 2 / ratio;
 
-            var radius = 0.5;
+            var radius = 0.5 / ratio;
 
             var data = {
 
@@ -148,7 +149,7 @@ define(function (require){
                         "mirrored"      : false,
 
                         "wheelRadius"           : radius,
-                        "suspensionRestLength"  : 0.25,
+                        "suspensionRestLength"  : 0.25 / (ratio),
 
                         "connectionPoint"   : [ -dx, -dy, dzFront ],
                         "wheelDirection"    : [ 0, -1, 0 ],
@@ -164,7 +165,7 @@ define(function (require){
                         "mirrored"      : true,
 
                         "wheelRadius"           : radius,
-                        "suspensionRestLength"  : 0.25,
+                        "suspensionRestLength"  : 0.25 / (ratio),
 
                         "connectionPoint"   : [ dx, -dy, dzFront ],
                         "wheelDirection"    : [ 0, -1, 0 ],
@@ -181,7 +182,7 @@ define(function (require){
                         "mirrored"      : false,
 
                         "wheelRadius"           : radius,
-                        "suspensionRestLength"  : 0.25,
+                        "suspensionRestLength"  : 0.5 / (ratio),
 
                         "connectionPoint"   : [ -dx, -dy, -dzBack ],
                         "wheelDirection"    : [ 0, -1, 0 ],
@@ -194,7 +195,7 @@ define(function (require){
                         "isFrontWheel"  : false,
 
                         "wheelRadius"           : radius,
-                        "suspensionRestLength"  : 0.25,
+                        "suspensionRestLength"  : 0.5 / (ratio),
 
                         "connectionPoint"   : [ dx, -dy, -dzBack ],
                         "wheelDirection"    : [ 0, -1, 0 ],
@@ -205,7 +206,7 @@ define(function (require){
 
                 "maxSuspensionTravelCm" : 750.0,
                 "maxSuspensionForce"    : 6000.0,
-                "suspensionStiffness"   : 10.0,
+                "suspensionStiffness"   : 10.0 * ratio,
                 "suspensionCompression" : 20.83,
                 "suspensionDamping"     : 0.88,
                 "rollInfluence"         : 0.1,
