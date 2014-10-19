@@ -19,9 +19,14 @@ Installation
 - run: python -m SimpleHTTPServer
 - open web browser and start playing
 
+Try last release here!
+----------------
+http://linorabolini.github.io/
+
 Known issues
 ------------
-Game not finished
+- No reset button
+- If the car flips down there is no way to flip it back
 
 
 
