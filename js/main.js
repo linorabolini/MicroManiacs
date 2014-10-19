@@ -22,8 +22,9 @@ require.config({
         'LevelViewport' : 'src/views/LevelViewport',
 
 // upper level
+        'utils': 'src/utils',
         'APP': 'src/app',
-        'LevelManager' : 'src/LevelManager'
+        'fileManager' : 'src/fileManager'
     }
 });
 
@@ -32,7 +33,6 @@ require(['jquery', 'APP', 'datgui'],
 
         // component setup
         //==============================================
-        
         APP.setup();
 
         // main loop config
