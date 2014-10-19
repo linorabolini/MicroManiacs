@@ -109,8 +109,10 @@ define(function (require){
             var loader = new THREE.ObjectLoader();
             var chasis = loader.parse(fileManager.CHASIS[0]);
 
-            var chasisData = this.serializeVehicle(chasis, spawner);
-            chasisData[10] = 50;
+            chasis.position.copy(spawner.position);
+            chasis.rotation.copy(spawner.rotation);
+            
+            var chasisData = this.serializeMesh(chasis);
 
             this.scene.add(chasis);
             this.bodies.push(chasis);

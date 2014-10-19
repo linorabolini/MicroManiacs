@@ -31,6 +31,9 @@
 	"object": {
 		"uuid": "F1A8294D-0DB3-4D47-AB7A-CCB49DCF7584",
 		"name": "Box 1",
+		"userData": {
+			"mass": 50
+		},
 		"type": "Mesh",
 		"geometry": "911AB290-3D13-4DED-9273-C1E557121111",
 		"material": "10D86B62-6B49-46B5-B8BF-B685C90A35CB",

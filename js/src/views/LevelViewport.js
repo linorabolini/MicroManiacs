@@ -28,7 +28,7 @@ define(function (require){
 				this.renderer = new THREE.CanvasRenderer();
 
 			this.renderer.shadowMapEnabled = true;
-			// this.renderer.shadowMapType = THREE.PCFShadowMap;
+			this.renderer.shadowMapType = THREE.PCFShadowMap;
 
 			this.renderer.setClearColor(0x00688B, 1);
 			this.renderer.setSize( window.innerWidth, window.innerHeight );
