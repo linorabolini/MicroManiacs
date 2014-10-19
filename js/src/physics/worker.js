@@ -21,7 +21,7 @@ var bodiesMap = {};
 var keys = [];
 
 var ENGINE_FORCE = 300;
-var STEERING = 0.7;
+var STEERING = 0.4;
 
 function Keys() {
   return {
