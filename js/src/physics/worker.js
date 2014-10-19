@@ -21,7 +21,7 @@ var bodiesMap = {};
 var keys = [];
 
 var ENGINE_FORCE = 300;
-var STEERING = 0.5;
+var STEERING = 0.7;
 
 function Keys() {
   return {
@@ -103,7 +103,7 @@ function createVehicle( data ) {
   var vehicleTuning = new Ammo.btVehicleTuning();
   var rollInfluence = ( data.rollInfluence !== undefined ) ? data.rollInfluence : 0.1;
 
-  var chassis = addObject(data.chasisData, [0,1,0]);
+  var chassis = addObject(data.chasisData, [0,0,0]);
   var raycaster = new Ammo.btDefaultVehicleRaycaster( dynamicsWorld );
   var vehicle = new Ammo.btRaycastVehicle( vehicleTuning, chassis, raycaster );
 

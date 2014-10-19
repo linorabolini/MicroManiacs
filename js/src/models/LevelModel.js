@@ -3,7 +3,7 @@ define(function (require){
     var BaseObject = require('BaseObject'),
         THREE = require('three'),
         fileManager = require('fileManager'),
-        Utils = require('utils');
+        utils = require('utils');
 
     //  WORKER SHARED MESSAGES
 
@@ -43,32 +43,11 @@ define(function (require){
             this.wheels = [];
 
 
-            function getKeyCode(key) {
-                var code;
-                switch (event.keyCode) {
-                    case 38:
-                        code = "up";
-                        break;
-                    case 40:
-                        code = "down";
-                        break;
-                    case 37:
-                        code = "left";
-                        break;
-                    case 39:
-                        code = "right";
-                        break;
-                    default:
-                        code = ""
-                }
-                return code;
-            }
-
             var scope = this;
 
             window.onkeydown = function (event) {
 
-                var code = getKeyCode(event.keyCode);
+                var code = utils.getKeyCode(event.keyCode);
 
                 scope.physicsWorker.postMessage({
                     type: WORKER.INPUT,
@@ -81,7 +60,7 @@ define(function (require){
             };
             window.onkeyup = function (event) {
 
-                var code = getKeyCode(event.keyCode);
+                var code = utils.getKeyCode(event.keyCode);
 
                 scope.physicsWorker.postMessage({
                     type: WORKER.INPUT,
@@ -216,7 +195,7 @@ define(function (require){
                 "suspensionCompression" : 20.83,
                 "suspensionDamping"     : 0.88,
                 "rollInfluence"         : 0.1,
-                "frictionSlip"          : 1
+                "frictionSlip"          : 1000
 
             }
 
@@ -244,9 +223,9 @@ define(function (require){
             var h = window.innerHeight;
 
             if (PERSPECTIVE_CAMERA) { 
-                this.camera = new THREE.PerspectiveCamera( 70, w / h, 1, 1000 );
+                this.camera = new THREE.PerspectiveCamera( 70, w / h, 1, 1500 );
             } else {
-                this.camera = new THREE.OrthographicCamera( -w/2, w/2, h/2, -h/2, 1, 1000 );
+                this.camera = new THREE.OrthographicCamera( -w/2, w/2, h/2, -h/2, 1, 1500 );
             }
 
             var cameraData = sceneData.getObjectByName("CAMERA");
@@ -285,7 +264,7 @@ define(function (require){
             return serializedMesh;
         },
         getFreeSpawner: function() {
-            return Utils.getRandom(this.spawners);
+            return utils.getRandom(this.spawners);
         },
         serializeMesh: function (mesh) {
 
@@ -299,7 +278,6 @@ define(function (require){
             offset = this.serializeRotation(mesh, object, offset);
             offset = this.serializeBoxSize(mesh, object, offset);
 
-            console.log(mesh)
             object[offset] = mesh.userData.mass !== undefined ? mesh.userData.mass : 1;
 
             return object;
