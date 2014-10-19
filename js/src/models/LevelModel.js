@@ -83,6 +83,9 @@ define(function (require){
             // load camera
             this.loadCameraFromSceneData(this.scene);
 
+            // load light
+            this.loadLightFromSceneData(this.scene);
+
             // load static objects
             this.loadStaticObjectsFromSceneData(this.scene);
 
@@ -103,14 +106,25 @@ define(function (require){
         addPlayer: function (playerData) {
 
             var spawner = this.getFreeSpawner();
-            var spawnerData = this.serializeObject3D(spawner);
-
             var loader = new THREE.ObjectLoader();
             var chasis = loader.parse(fileManager.CHASIS[0]);
 
-
-            var chasisData = this.serializeMesh(chasis);
+            var chasisData = this.serializeVehicle(chasis, spawner);
             chasisData[10] = 50;
+
+            this.scene.add(chasis);
+            this.bodies.push(chasis);
+
+            chasis.castShadow = true;
+            chasis.receiveShadow = true;
+
+            // wheels
+
+            for (var i = 0; i < 4; i++) {
+                var wheel = loader.parse(fileManager.WHEELS[0]);
+                this.scene.add(wheel);
+                this.wheels.push(wheel);
+            };
 
             var dx = 0.9;
             var dy = 0.4;
@@ -122,8 +136,6 @@ define(function (require){
             var data = {
 
                 "vehicleID" : playerData.vehicleID,
-
-                "spawnData" : spawnerData,
 
                 "chasisData": chasisData,
 
@@ -204,17 +216,6 @@ define(function (require){
                 data: data
             });
 
-            this.scene.add(chasis);
-            this.bodies.push(chasis);
-
-            // wheels
-
-            for (var i = 0; i < 4; i++) {
-                var wheel = loader.parse(fileManager.WHEELS[0]);
-                this.scene.add(wheel);
-                this.wheels.push(wheel);
-            };
-
             this.vehicles.push(playerData);
         },
         loadCameraFromSceneData: function (sceneData) {
@@ -234,6 +235,29 @@ define(function (require){
     
             this.camera.position.copy(pos.position);
             this.camera.lookAt(target.position);
+
+        },
+        loadLightFromSceneData: function (sceneData) {
+
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+
+            // light
+
+            var light = sceneData.getObjectByName("LIGHT", true);
+            light.castShadow = true;
+
+            light.shadowCameraNear = 100;
+            light.shadowCameraFar = 1500;
+            light.shadowCameraFov = 10;
+
+            //light.shadowCameraVisible = true;
+
+            light.shadowBias = 0.0001;
+            light.shadowDarkness = 0.2;
+
+            light.shadowMapWidth = w;
+            light.shadowMapHeight = h;
         },
         loadStaticObjectsFromSceneData: function (sceneData) {
             // load objects from LEVEL layer
@@ -243,7 +267,9 @@ define(function (require){
             for (var i = 0; i < len; i++) {
                 var object = levelObject.children[i];
 
-                // track object
+                object.castShadow = true;
+                object.receiveShadow = true;
+
                 this.bodies.push(object);    // logicaly
                 this.createPhysicalObject(object);  // physicaly
             };
@@ -276,6 +302,22 @@ define(function (require){
 
             offset = this.serializePosition(mesh, object, offset);
             offset = this.serializeRotation(mesh, object, offset);
+            offset = this.serializeBoxSize(mesh, object, offset);
+
+            object[offset] = mesh.userData.mass !== undefined ? mesh.userData.mass : 1;
+
+            return object;
+        },
+        serializeVehicle: function (mesh, spawner) {
+
+            // serialize the mesh params to pass them to the
+            // physics worker.
+
+            var offset = 0;
+            var object = [];
+
+            offset = this.serializePosition(spawner, object, offset);
+            offset = this.serializeRotation(spawner, object, offset);
             offset = this.serializeBoxSize(mesh, object, offset);
 
             object[offset] = mesh.userData.mass !== undefined ? mesh.userData.mass : 1;

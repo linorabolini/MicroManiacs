@@ -103,7 +103,7 @@ function createVehicle( data ) {
   var vehicleTuning = new Ammo.btVehicleTuning();
   var rollInfluence = ( data.rollInfluence !== undefined ) ? data.rollInfluence : 0.1;
 
-  var chassis = addObject(data.chasisData, [0,0,0]);
+  var chassis = addObject(data.chasisData);
   var raycaster = new Ammo.btDefaultVehicleRaycaster( dynamicsWorld );
   var vehicle = new Ammo.btRaycastVehicle( vehicleTuning, chassis, raycaster );
 
@@ -256,7 +256,8 @@ function readBulletObject( i, data, offset ) {
 }
 
 function setVehicleKey (id, code, status) {
-  keys[id][code] = status;
+  if ( keys[id][code] !== undefined )
+    keys[id][code] = status;
 }
 
 function getVehicleKey (id, code) {

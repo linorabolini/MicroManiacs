@@ -1,31 +1,33 @@
 define(function(require){
 	var $ = require('jquery');
 
-	// constants
-
-    var NUM_LEVELS = 1,
-    	NUM_CHASIS = 1,
-    	NUM_WHEELS = 1,
-        DATA_PATH = "js/data/";
-
 	var files = {
 		LEVELS : [],
 		CHASIS : [],
-		WHEELS : []
+		WHEELS : [],
+		FILES_LOADED : 0,
+		TOTAL_FILES : 0,
+		callback : null
 	}
 
-	function loadFiles(path, name, array, number) {
+	files.hasFinished = function () {
+		return files.FILES_LOADED == files.TOTAL_FILES;
+	}
+
+	files.loadFiles = function (path, name, array, number) {
+		files.TOTAL_FILES += number;
 		for (var i = 1; i <= number; i++) {
 			var fileName = name + "_" + i;
 			$.getJSON(path + fileName + ".js", function(data) {
 				array.push(data);
+				files.FILES_LOADED++;
+
+				if (undefined !== files.callback) {
+					files.hasFinished() && files.callback();
+				}
 			});
 		}
 	}
-
-	loadFiles(DATA_PATH + "/levels/", "level", files.LEVELS, 1);
-	loadFiles(DATA_PATH + "/cars/", "chasis", files.CHASIS, 1);
-	loadFiles(DATA_PATH + "/cars/", "wheel", files.WHEELS, 1);
 
 	return files;
 });
