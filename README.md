@@ -7,6 +7,8 @@ Introduction
 As ammo.js is implemented using a web worker, a python simple server is needed
 to run the game because of security matters.
 
+Last release: http://linorabolini.github.io/
+
 Licence
 -------
 The code in this repository is available under the [MIT License](https://secure.wikimedia.org/wikipedia/en/wiki/Mit_license).  
@@ -19,9 +21,11 @@ Installation
 - run: python -m SimpleHTTPServer
 - open web browser and start playing
 
+
 Known issues
 ------------
-Game not finished
+- No reset button
+- If the car flips down there is no way to flip it back
 
 
 
