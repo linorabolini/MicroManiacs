@@ -4,36 +4,33 @@ require.config({
     baseUrl: 'js',
     paths: {
     // libs
-        'jquery': 'libs/jquery-2.1.0.min',
-        'underscore': 'libs/underscore-min',
-        'datgui': 'libs/dat.gui',
-        'fishbone' : 'libs/fishbone',
-        'three' : 'libs/three.min',
+        'jquery'        : 'libs/jquery-2.1.0.min',
+        'underscore'    : 'libs/underscore-min',
+        'datgui'        : 'libs/dat.gui',
+        'fishbone'      : 'libs/fishbone',
+        'three'         : 'libs/three.min',
 
     //src
-        // models
-        'Time': 'src/Time',
-        'BaseObject' : 'src/models/BaseObject',
-        'LevelModel' : 'src/models/LevelModel',
-        'LevelScreen' : 'src/models/LevelScreen',
-
-
-        // views
-        'LevelViewport' : 'src/views/LevelViewport',
+        // objects
+        'BaseObject'    : 'src/objects/BaseObject',
+        'LevelModel'    : 'src/objects/LevelModel',
+        'LevelScreen'   : 'src/objects/LevelScreen',
+        'LevelViewport' : 'src/objects/LevelViewport',
 
 // upper level
-        'utils': 'src/utils',
-        'APP': 'src/app',
-        'fileManager' : 'src/fileManager'
+        'input'         : 'src/input',
+        'utils'         : 'src/utils',
+        'app'           : 'src/app',
+        'files'         : 'src/files'
     }
 });
 
-require(['jquery', 'APP', 'datgui'],
-    function ($, APP) {
+require(['jquery', 'app', 'datgui'],
+    function ($, app) {
 
         // component setup
         //==============================================
-        APP.setup();
+        app.setup();
 
         // main loop config
         //==============================================
@@ -47,7 +44,7 @@ require(['jquery', 'APP', 'datgui'],
             dt *= 0.001;
 
             // update elements
-            APP.update(dt);
+            app.update(dt);
 
             window.requestAnimationFrame(step);
         }

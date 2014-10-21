@@ -29,5 +29,9 @@ define(function(require){
 		}
 	}
 
+	files.onLoaded = function(callback) {
+		this.callback = callback;
+	}
+
 	return files;
 });

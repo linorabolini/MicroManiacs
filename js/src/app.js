@@ -3,14 +3,10 @@ define(function (require) {
 
     var BaseObject = require('BaseObject'),
         LevelScreen = require('LevelScreen'),
-        fileManager = require('fileManager');
+        files = require('files'),
+        input = require('input');
 
     // constants
-
-    var NUM_LEVELS = 1,
-        NUM_CHASIS = 1,
-        NUM_WHEELS = 1,
-        DATA_PATH = "js/data/";
 
     var APP = BaseObject.extend({
 
@@ -23,13 +19,46 @@ define(function (require) {
         setup: function () {
             console.log("App Init.");
 
-            fileManager.callback = this.startApp;
-            fileManager.loadFiles(DATA_PATH + "/levels/", "level", fileManager.LEVELS, 1);
-            fileManager.loadFiles(DATA_PATH + "/cars/", "chasis", fileManager.CHASIS, 1);
-            fileManager.loadFiles(DATA_PATH + "/cars/", "wheel", fileManager.WHEELS, 1);
+            this.loadDataFiles();
+            this.configureInput();
+            
+        },
+        loadDataFiles: function () {
+            var NUM_LEVELS = 1,
+                NUM_CHASIS = 1,
+                NUM_WHEELS = 1,
+                DATA_PATH = "js/data/";
+
+            files.onLoaded(this.startApp);
+            files.loadFiles(DATA_PATH + "/levels/", "level", files.LEVELS, NUM_LEVELS);
+            files.loadFiles(DATA_PATH + "/cars/", "chasis", files.CHASIS, NUM_CHASIS);
+            files.loadFiles(DATA_PATH + "/cars/", "wheel", files.WHEELS, NUM_WHEELS);
+        },
+        configureInput: function () {
+
+            configureKeyboardEvents();
+
+            input.addSource("keyboard", window);
+        },
+        configureKeyboardEvents: function () {
+            function loadKeyboardSource (source, id) {
+                function keyEvent(event) {
+                    if (event.repeat) return;
+                    var data = { id: id,
+                                value: event.type == "keydown",
+                                code: event.keyCode,
+                                type: TYPE.KEY 
+                        };
+                    input.trigger("input", data);
+                };
+                source.addEventListener( "keydown", keyEvent);
+                source.addEventListener( "keyup"  , keyEvent);
+            }
+
+            input.addSourceLoader("keyboard", loadKeyboardSource);
         },
         startApp: function () {
-            var level = new LevelScreen(fileManager.LEVELS[0]);
+            var level = new LevelScreen(files.LEVELS[0]);
             this.setScreen(level);
         },
         setScreen: function (newScreen) {

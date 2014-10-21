@@ -2,8 +2,9 @@ define(function (require){
     
     var BaseObject = require('BaseObject'),
         THREE = require('three'),
-        fileManager = require('fileManager'),
-        utils = require('utils');
+        files = require('files'),
+        utils = require('utils'),
+        input = require('input');
 
     //  WORKER SHARED MESSAGES
 
@@ -17,7 +18,7 @@ define(function (require){
     };
 
     // SCALE
-    var SCALE = 25; // MORE SCALE -> MORE SPEED
+    var SCALE = 50; // MORE SCALE -> MORE SPEED
     var PERSPECTIVE_CAMERA = false;
 
     return BaseObject.extend({
@@ -29,7 +30,6 @@ define(function (require){
         scene: null,
         camera: null,
         spawners: null,
-        vehicles: null,
         wheels: null,
 
         // functions
@@ -39,38 +39,22 @@ define(function (require){
 
             this.bodies = [];
             this.spawners = [];
-            this.vehicles = [];
             this.wheels = [];
 
 
             var scope = this;
 
-            window.onkeydown = function (event) {
+            input.on("input", this.handleInput);
+        },
+        handleInput: function (event) {
+            if (event.type == "key") {
+                event.code = utils.getKeyCode(event.code);
 
-                var code = utils.getKeyCode(event.keyCode);
-
-                scope.physicsWorker.postMessage({
+                this.physicsWorker.postMessage({
                     type: WORKER.INPUT,
-                    data: {
-                        id: 0,
-                        status: true,
-                        code: code
-                    }
+                    data: event
                 });
-            };
-            window.onkeyup = function (event) {
-
-                var code = utils.getKeyCode(event.keyCode);
-
-                scope.physicsWorker.postMessage({
-                    type: WORKER.INPUT,
-                    data: {
-                        id: 0,
-                        status: false,
-                        code: code
-                    }
-                });
-            };
+            }
         },
         generateFromSceneData: function (data) {
             // setup the physical world
@@ -94,20 +78,22 @@ define(function (require){
 
             // TODO THIS: vehicles have to be created at the start and 
             // upon connection of new controllers
+            this.addPlayers(input.getSources());
 
-                // create a sample vehicle
-                var playerData = {
-                    id: 3,
-                    vehicleID: 1
-                };
-                this.addPlayer(playerData);
             //
         },
-        addPlayer: function (playerData) {
+        addPlayers: function (inputSources) {
+            for (var i = 0; i < inputSources.length; i++) {
+                var inputSource = inputSources[i];
+
+                this.addPlayer(inputSource.id);
+            };
+        },
+        addPlayer: function (id) {
 
             var spawner = this.getFreeSpawner();
             var loader = new THREE.ObjectLoader();
-            var chasis = loader.parse(fileManager.CHASIS[0]);
+            var chasis = loader.parse(files.CHASIS[0]);
 
             chasis.position.copy(spawner.position);
             chasis.rotation.copy(spawner.rotation);
@@ -123,7 +109,7 @@ define(function (require){
             // wheels
 
             for (var i = 0; i < 4; i++) {
-                var wheel = loader.parse(fileManager.WHEELS[0]);
+                var wheel = loader.parse(files.WHEELS[0]);
                 this.scene.add(wheel);
                 this.wheels.push(wheel);
             };
@@ -138,7 +124,7 @@ define(function (require){
 
             var data = {
 
-                "vehicleID" : playerData.vehicleID,
+                "id" : id,
 
                 "chasisData": chasisData,
 
@@ -219,7 +205,6 @@ define(function (require){
                 data: data
             });
 
-            this.vehicles.push(playerData);
         },
         loadCameraFromSceneData: function (sceneData) {
 
@@ -406,17 +391,18 @@ define(function (require){
 
             return offset;
         },
+        update: function (dt) {
+            this.__update(dt);
+        },
         dispose: function () {
             if (physicsWorker) physicsWorker.terminate();
 
             physicsWorker = null;
-            this.vehicles = null;
-            bodies = null;
-            scene = null;
-            camera = null;
-            spawners = null;
-            vehicles = null;
-            wheels = null;
+            this.bodies = null;
+            this.this.scene = null;
+            this.camera = null;
+            this.spawners = null;
+            this.wheels = null;
 
             this.__dispose();
         }

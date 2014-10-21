@@ -23,6 +23,9 @@ define(function (require) {
             case 39: // key right
                 code = "right";
                 break;
+            case 32: // key right
+                code = "space";
+                break;
         }
 
         return code;

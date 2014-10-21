@@ -20,15 +20,19 @@ var bodiesMap = {};
 
 var keys = [];
 
-var ENGINE_FORCE = 300;
+var ENGINE_FORCE = 150;
 var STEERING = 0.4;
+var BRAKE = 2;
+
+var FPS = 45;
 
 function Keys() {
   return {
     "up":false,
     "down": false,
     "left": false,
-    "right":false
+    "right":false,
+    "space":false
   }
 }
 
@@ -47,7 +51,7 @@ function startUp(data) {
     update(now - last);
     last = now;
   }
-  setInterval(mainLoop, 1000/60);
+  setInterval(mainLoop, 1000/FPS);
 }
 
 function addObject(object, offset) {
@@ -265,7 +269,7 @@ function getVehicleKey (id, code) {
 }
 
 function handleInput (input) {
-  setVehicleKey(input.id, input.code, input.status);
+  setVehicleKey(input.id, input.code, input.value);
 }
 
 function updateVehicles () {
@@ -285,6 +289,11 @@ function updateVehicles () {
 
     setSteering(value * STEERING, i, 0);
     setSteering(value * STEERING, i, 1);
+
+    var space = getVehicleKey(i, "space");
+
+    setBrake(BRAKE * !!space, i, 2);    
+    setBrake(BRAKE * !!space, i, 3);    
 
   };
 
@@ -343,7 +352,8 @@ onmessage = function(event) {
       startUp(data);
       break;
     case CREATE_CAR:
-      createVehicle(data);
+      if(data.id >= vehicles.length - 1)
+        createVehicle(data);
       break;
     case ADD_OBJECT:
       addObject(data);
