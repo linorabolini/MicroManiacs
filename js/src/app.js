@@ -36,7 +36,7 @@ define(function (require) {
         },
         configureInput: function () {
 
-            configureKeyboardEvents();
+            this.configureKeyboardEvents();
 
             input.addSource("keyboard", window);
         },
@@ -47,7 +47,7 @@ define(function (require) {
                     var data = { id: id,
                                 value: event.type == "keydown",
                                 code: event.keyCode,
-                                type: TYPE.KEY 
+                                type: "key" 
                         };
                     input.trigger("input", data);
                 };
