@@ -1,7 +1,9 @@
 define(function (require){
 	
 	var BaseObject = require('BaseObject'),
-		THREE = require('three');
+		THREE = require('three'),
+		utils = require('utils'),
+		input = require('input');
 
 	return BaseObject.extend({
 
@@ -11,7 +13,16 @@ define(function (require){
 		model: null,
 
 		// functions
-		
+		init: function () {
+			this.__init();
+			input.on("input", this.handleInput);
+        },
+        handleInput: function (event) {
+            if (event.type == "key") {
+                var key = utils.getKeyCode(event.code);
+                console.log("key " + key + " pressed");
+            }
+        },
 		addToScreen: function () {
 			document.body.appendChild( this.renderer.domElement );
 		},

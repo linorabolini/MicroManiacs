@@ -41,9 +41,6 @@ define(function (require){
             this.spawners = [];
             this.wheels = [];
 
-
-            var scope = this;
-
             input.on("input", this.handleInput);
         },
         handleInput: function (event) {

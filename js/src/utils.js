@@ -10,7 +10,7 @@ define(function (require) {
     utils.getKeyCode = function (key) {
         var code = "";
 
-        switch (event.keyCode) {
+        switch (key) {
             case 38: // key up
                 code = "up";
                 break;

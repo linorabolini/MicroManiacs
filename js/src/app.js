@@ -19,9 +19,8 @@ define(function (require) {
         setup: function () {
             console.log("App Init.");
 
-            this.loadDataFiles();
             this.configureInput();
-            
+            this.loadDataFiles();
         },
         loadDataFiles: function () {
             var NUM_LEVELS = 1,
