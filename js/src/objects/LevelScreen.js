@@ -16,7 +16,6 @@ define(function (require) {
 
         init: function (data) {
             this.__init();
-            console.log("level screen setup.");
 
             // create level from scene data
             this.level = new LevelModel();

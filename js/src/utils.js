@@ -8,8 +8,9 @@ define(function (require) {
     };
 
     utils.getKeyCode = function (key) {
-        var code = "";
+        var code;
 
+        // override some keys
         switch (key) {
         case 38: // key up
             code = "up";
@@ -26,6 +27,8 @@ define(function (require) {
         case 32: // key right
             code = "space";
             break;
+        default:
+            code = String.fromCharCode(key);
         }
 
         return code;

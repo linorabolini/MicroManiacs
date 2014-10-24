@@ -5,6 +5,7 @@ define(function (require) {
         LevelScreen = require('LevelScreen'),
         files = require('files'),
         input = require('input'),
+        keyboard = require('keyboard'),
         APP = null;
     // constants
 
@@ -17,8 +18,6 @@ define(function (require) {
         // functions
 
         setup: function () {
-            console.log("App Init.");
-
             this.configureInput();
             this.loadDataFiles();
         },
@@ -34,36 +33,20 @@ define(function (require) {
             files.loadFiles(DATA_PATH + "/cars/", "wheel", files.WHEELS, NUM_WHEELS);
         },
         configureInput: function () {
+            // add source loaders
+            input.addSourceLoader(keyboard);
 
-            this.configureKeyboardEvents();
-
-            input.addSource("keyboard", window);
-        },
-        configureKeyboardEvents: function () {
-            function loadKeyboardSource(source, id) {
-                function keyEvent(event) {
-                    if (event.repeat) {
-                        return;
-                    }
-                    var data = { id: id,
-                                value: event.type === "keydown",
-                                code: event.keyCode,
-                                type: "key"
-                            };
-                    input.trigger("input", data);
-                }
-                source.addEventListener("keydown", keyEvent);
-                source.addEventListener("keyup", keyEvent);
-            }
-
-            input.addSourceLoader("keyboard", loadKeyboardSource);
+            // add input sources
+            input.addSource(keyboard.type, window);
         },
         startApp: function () {
             var level = new LevelScreen(files.LEVELS[0]);
             this.setScreen(level);
         },
         setScreen: function (newScreen) {
-            this.screen && this.removeChild(this.screen).dispose();
+            if (this.screen) {
+                this.removeChild(this.screen).dispose();
+            }
 
             this.screen = newScreen;
             this.addChild(this.screen);

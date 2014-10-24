@@ -17,7 +17,12 @@ require.config({
         'LevelScreen'   : 'src/objects/LevelScreen',
         'LevelViewport' : 'src/objects/LevelViewport',
 
+        // inputs
+        'keyboard'      : 'src/inputs/keyboard',
+
 // upper level
+        'serializer'    : 'src/serializer',
+        'physics'       : 'src/physics',
         'input'         : 'src/input',
         'utils'         : 'src/utils',
         'app'           : 'src/app',
@@ -25,8 +30,8 @@ require.config({
     }
 });
 
-require(['jquery', 'app', 'datgui'],
-    function ($, app) {
+require(['app', 'datgui'],
+    function (app) {
 
         // component setup
         //==============================================
@@ -34,21 +39,12 @@ require(['jquery', 'app', 'datgui'],
 
         // main loop config
         //==============================================
-
-        var start = null;
-        function step(timestamp) {
-
-            // calculate elapsed time since last frame
-            if (start === null) start = timestamp;
-            var dt = timestamp - start;
-            dt *= 0.001;
-
-            // update elements
-            app.update(dt);
-
+        var last = Date.now();
+        function step(now) {
+            app.update(now - last);
+            last = now;
             window.requestAnimationFrame(step);
         }
-
         window.requestAnimationFrame(step);
 
     });

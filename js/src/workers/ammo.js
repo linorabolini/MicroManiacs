@@ -25,7 +25,7 @@ var ENGINE_FORCE = 150;
 var STEERING = 0.4;
 var BRAKE = 2;
 
-var FPS = 45;
+var FPS = 50;
 
 function Keys() {
     return {
@@ -38,13 +38,6 @@ function Keys() {
 }
 
 function startUp(data) {
-  // create the initial static level
-  if(data && data.staticBodies) {
-    for (var i = 0; i < data.staticBodies.length; i++) {
-      addObject(data.staticBodies[i]);
-    };
-  }
-
   // loop
   var last = Date.now();
   function mainLoop() {
@@ -349,9 +342,6 @@ onmessage = function(event) {
     case INPUT:
       handleInput(data);
       break;
-    case START:
-      startUp(data);
-      break;
     case CREATE_CAR:
       if(data.id >= vehicles.length - 1)
         createVehicle(data);
@@ -366,3 +356,5 @@ onmessage = function(event) {
         postMessage("message arrived");
   }
 }
+
+startUp();

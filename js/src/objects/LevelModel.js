@@ -3,7 +3,9 @@ define(function (require) {
     var BaseObject          = require('BaseObject'),
         THREE               = require('three'),
         files               = require('files'),
-        utils               = require('utils');
+        utils               = require('utils'),
+        serializer          = require('serializer'),
+        physics             = require('physics');
 
     //  WORKER SHARED MESSAGES
     var WORKER = {
@@ -15,15 +17,14 @@ define(function (require) {
         SIMULATION_DATA     : 5
     };
 
-    var WORKER_PATH         = './js/src/physics/worker.js',
-        SCALE               = 50, // + SCALE -> + SPEED
+    var WORKER_PATH         = './js/src/workers/ammo.js',
+        SCALE               = 80, // + SCALE -> + SPEED
         PERSPECTIVE_CAMERA  = false;
 
     return BaseObject.extend({
 
         // variables
 
-        physicsWorker: null,
         bodies: null,
         scene: null,
         camera: null,
@@ -42,16 +43,12 @@ define(function (require) {
         handleInput: function (event) {
             if (event.type === "key") {
                 event.code = utils.getKeyCode(event.code);
-
-                this.physicsWorker.postMessage({
-                    type: WORKER.INPUT,
-                    data: event
-                });
+                physics.send(WORKER.INPUT, event);
             }
         },
         generateFromSceneData: function (data) {
             // setup the physical world
-            this.setupWorker();
+            physics.loadWorker(WORKER_PATH, this.onmessage);
 
             // create a new scene info from data
             var loader = new THREE.ObjectLoader();
@@ -94,7 +91,7 @@ define(function (require) {
             this.scene.add(chasis);
             this.bodies.push(chasis);
 
-            chasisData = this.serializeMesh(chasis);
+            chasisData = serializer.mesh(chasis, SCALE);
 
             // wheels
 
@@ -192,10 +189,7 @@ define(function (require) {
 
             }
 
-            this.physicsWorker.postMessage({
-                type: WORKER.CREATE_CAR,
-                data: data
-            });
+            physics.send(WORKER.CREATE_CAR, data);
 
         },
         loadCameraFromSceneData: function (sceneData) {
@@ -253,121 +247,34 @@ define(function (require) {
             this.spawners      = spawnersObject.children;
         },
         createPhysicalObject: function (mesh) {
-            var serializedMesh = this.serializeMesh(mesh);
-
-            this.physicsWorker.postMessage({
-                type: WORKER.ADD_OBJECT,
-                data: serializedMesh
-            });
-
+            var data = serializer.mesh(mesh, SCALE);
+            physics.send(WORKER.ADD_OBJECT, data);
         },
         getFreeSpawner: function() {
             return utils.getRandom(this.spawners);
-        },
-        serializeMesh: function (mesh) {
-
-            // serialize the mesh params to pass them to the
-            // physics worker.
-
-            var offset = 0,
-                object = [];
-
-            offset = this.serializePosition(mesh, object, offset);
-            offset = this.serializeRotation(mesh, object, offset);
-            offset = this.serializeBoxSize(mesh, object, offset);
-
-            object[offset] = mesh.userData.mass !== undefined ? mesh.userData.mass : 1;
-
-            return object;
-        },
-        serializeObject3D: function (mesh) {
-
-            // serialize an Object 3d
-
-            var offset = 0,
-                object = [];
-
-            offset = this.serializePosition(mesh, object, offset);
-            offset = this.serializeRotation(mesh, object, offset);
-
-            return object;
-        },
-        serializePosition: function(obj, array, offset) {
-            var origin      = obj.position;
-            array[offset]   = origin.x / SCALE;
-            array[offset+1] = origin.y / SCALE;
-            array[offset+2] = origin.z / SCALE;
-
-            return offset + 3;
-        },
-        serializeRotation: function(obj, array, offset) {
-            var rotation    = obj.quaternion;
-            array[offset]   = rotation.x;
-            array[offset+1] = rotation.y;
-            array[offset+2] = rotation.z;
-            array[offset+3] = rotation.w;
-
-            return offset + 4;
-        },
-        serializeBoxSize: function(obj, array, offset) {
-            var size        = obj.geometry.parameters;
-            array[offset]   = size.width / SCALE;
-            array[offset+1] = size.height / SCALE;
-            array[offset+2] = size.depth / SCALE;
-
-            return offset + 3;
-        },
-        setupWorker: function () {
-            // Worker
-            this.physicsWorker  = new Worker(WORKER_PATH);
-            this.physicsWorker.onmessage = this.onmessage;
-            this.physicsWorker.postMessage({
-                type: WORKER.START
-            });
         },
         onmessage: function (event) {
             var message = event.data;
 
             switch(message.type) {
-                case WORKER.SIMULATION_DATA:
-                    this.updateWorldWithSimulationData(message.data);
-                    break;
-                default:
+            case WORKER.SIMULATION_DATA:
+                this.updateWorldWithSimulationData(message.data);
+                break;
+            default:
             }
         },
         updateWorldWithSimulationData: function (data) {
             var offset = 0;
 
-            offset = this.updateObjectFromData(data, offset, this.bodies);
-            offset = this.updateObjectFromData(data, offset, this.wheels);
+            offset = serializer.applySerialData(data, offset, this.bodies, SCALE);
+            offset = serializer.applySerialData(data, offset, this.wheels, SCALE);
 
-        },
-        updateObjectFromData: function (data, offset, array) {
-            //bodies
-            for (var i = 0; i < array.length; i++) {
-                var body = array[i];
-                body.position.x = data[offset] * SCALE;
-                body.position.y = data[offset+1] * SCALE;
-                body.position.z = data[offset+2] * SCALE;
-
-                body.quaternion.x = data[offset+3];
-                body.quaternion.y = data[offset+4];
-                body.quaternion.z = data[offset+5];
-                body.quaternion.w = data[offset+6];
-
-                offset += 7;
-            }
-
-            return offset;
         },
         update: function (dt) {
             this.__update(dt);
         },
         dispose: function () {
-            if (this.physicsWorker)
-                this.physicsWorker.terminate();
-
-            physicsWorker   = null;
+            physics.dispose();
             this.bodies     = null;
             this.scene      = null;
             this.camera     = null;

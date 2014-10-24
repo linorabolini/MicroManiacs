@@ -30,7 +30,7 @@ define(function (require) {
         }
     };
 
-    files.onLoaded = function(callback) {
+    files.onLoaded = function (callback) {
         this.callback = callback;
     };
 
