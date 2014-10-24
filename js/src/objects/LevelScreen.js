@@ -1,5 +1,5 @@
-define(function (require){
-    
+define(function (require) {
+
     var BaseObject = require('BaseObject'),
         LevelModel = require('LevelModel'),
         LevelViewport = require('LevelViewport'),
@@ -36,14 +36,14 @@ define(function (require){
             input.on("input", this.handleInput);
         },
         handleInput: function (event) {
-            if (event.type == "key") {
+            if (event.type === "key") {
 
                 switch (event.code) {
-                    case 87: // W
-                        // this.level.rotateCamera("z", 20);
-                        break;
-                    default:
-                        this.level.handleInput(event);
+                case 87: // W
+                    // this.level.rotateCamera("z", 20);
+                    break;
+                default:
+                    this.level.handleInput(event);
                 }
             }
         }

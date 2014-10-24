@@ -1,3 +1,4 @@
+'use strict';
 
 var Module = { TOTAL_MEMORY: 256*1024*1024 };
 
@@ -27,13 +28,13 @@ var BRAKE = 2;
 var FPS = 45;
 
 function Keys() {
-  return {
-    "up":false,
-    "down": false,
-    "left": false,
-    "right":false,
-    "space":false
-  }
+    return {
+        "up": false,
+        "down": false,
+        "left": false,
+        "right": false,
+        "space": false
+    };
 }
 
 function startUp(data) {

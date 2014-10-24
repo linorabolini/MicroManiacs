@@ -1,5 +1,5 @@
-define(function (require){
-    
+define(function (require) {
+
     var BaseObject          = require('BaseObject'),
         THREE               = require('three'),
         files               = require('files'),
@@ -40,7 +40,7 @@ define(function (require){
             this.wheels = [];
         },
         handleInput: function (event) {
-            if (event.type == "key") {
+            if (event.type === "key") {
                 event.code = utils.getKeyCode(event.code);
 
                 this.physicsWorker.postMessage({
@@ -70,10 +70,11 @@ define(function (require){
             this.loadSpawnersFromSceneData(this.scene);
         },
         addPlayers: function (inputSources) {
-            for (var i = 0; i < inputSources.length; i++) {
-                var config = inputSources[i];
+            var i, config;
+            for (i = 0; i < inputSources.length; i++) {
+                config = inputSources[i];
                 this.addPlayer(config);
-            };
+            }
         },
         addPlayer: function (config) {
 
@@ -104,7 +105,7 @@ define(function (require){
                 this.scene.add(wheel);
                 this.wheels.push(wheel);
 
-            };
+            }
 
             var ratio   = SCALE  / 10,
                 dx      = 0.9 / ratio,
@@ -363,12 +364,12 @@ define(function (require){
             this.__update(dt);
         },
         dispose: function () {
-            if (physicsWorker)
-                physicsWorker.terminate();
+            if (this.physicsWorker)
+                this.physicsWorker.terminate();
 
             physicsWorker   = null;
             this.bodies     = null;
-            this.this.scene = null;
+            this.scene      = null;
             this.camera     = null;
             this.spawners   = null;
             this.wheels     = null;
