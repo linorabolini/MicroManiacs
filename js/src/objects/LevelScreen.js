@@ -42,6 +42,7 @@ define(function (require) {
                     // this.level.rotateCamera("z", 20);
                     break;
                 default:
+                    // delegate to level model
                     this.level.handleInput(event);
                 }
             }
