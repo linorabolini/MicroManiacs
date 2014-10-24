@@ -1,37 +1,38 @@
-define(function(require){
-	var $ = require('jquery');
+define(function (require) {
+    var $ = require('jquery');
 
-	var files = {
-		LEVELS : [],
-		CHASIS : [],
-		WHEELS : [],
-		FILES_LOADED : 0,
-		TOTAL_FILES : 0,
-		callback : null
-	}
+    var files = {
+        LEVELS : [],
+        CHASIS : [],
+        WHEELS : [],
+        FILES_LOADED : 0,
+        TOTAL_FILES : 0,
+        callback : null
+    };
 
-	files.hasFinished = function () {
-		return files.FILES_LOADED == files.TOTAL_FILES;
-	}
+    files.hasFinished = function () {
+        return files.FILES_LOADED === files.TOTAL_FILES;
+    };
 
-	files.loadFiles = function (path, name, array, number) {
-		files.TOTAL_FILES += number;
-		for (var i = 1; i <= number; i++) {
-			var fileName = name + "_" + i;
-			$.getJSON(path + fileName + ".js", function(data) {
-				array.push(data);
-				files.FILES_LOADED++;
+    files.loadFiles = function (path, name, array, number) {
+        var i, fileName;
+        files.TOTAL_FILES += number;
+        for (i = 1; i <= number; ++i) {
+            fileName = name + "_" + i;
+            $.getJSON(path + fileName + ".js", function (data) {
+                array.push(data);
+                files.FILES_LOADED++;
 
-				if (undefined !== files.callback) {
-					files.hasFinished() && files.callback();
-				}
-			});
-		}
-	}
+                if (undefined !== files.callback) {
+                    files.hasFinished() && files.callback();
+                }
+            });
+        }
+    };
 
-	files.onLoaded = function(callback) {
-		this.callback = callback;
-	}
+    files.onLoaded = function(callback) {
+        this.callback = callback;
+    };
 
-	return files;
+    return files;
 });

@@ -4,11 +4,11 @@ define(function (require) {
     var BaseObject = require('BaseObject'),
         LevelScreen = require('LevelScreen'),
         files = require('files'),
-        input = require('input');
-
+        input = require('input'),
+        APP = null;
     // constants
 
-    var APP = BaseObject.extend({
+    APP = BaseObject.extend({
 
         // variables
 
@@ -40,18 +40,20 @@ define(function (require) {
             input.addSource("keyboard", window);
         },
         configureKeyboardEvents: function () {
-            function loadKeyboardSource (source, id) {
+            function loadKeyboardSource(source, id) {
                 function keyEvent(event) {
-                    if (event.repeat) return;
+                    if (event.repeat) {
+                        return;
+                    }
                     var data = { id: id,
-                                value: event.type == "keydown",
+                                value: event.type === "keydown",
                                 code: event.keyCode,
-                                type: "key" 
-                        };
+                                type: "key"
+                            };
                     input.trigger("input", data);
-                };
-                source.addEventListener( "keydown", keyEvent);
-                source.addEventListener( "keyup"  , keyEvent);
+                }
+                source.addEventListener("keydown", keyEvent);
+                source.addEventListener("keyup", keyEvent);
             }
 
             input.addSourceLoader("keyboard", loadKeyboardSource);

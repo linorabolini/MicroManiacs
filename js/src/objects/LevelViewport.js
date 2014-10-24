@@ -1,4 +1,4 @@
-define(function (require){
+define(function (require) {
 
     var BaseObject = require('BaseObject'),
         THREE = require('three'),
@@ -52,7 +52,12 @@ define(function (require){
         },
         update: function (dt) {
             this.__update(dt);
-            this.model && this.renderer.render(this.model.scene, this.model.camera);
+            this.render(this.model);
+        },
+        render: function (model) {
+            var canRender = !!model && !!model.scene && !!model.camera;
+            if (canRender)
+                this.renderer.render(model.scene, model.camera);
         },
         dispose: function() {
             this.__dispose();
