@@ -40,12 +40,6 @@ define(function (require) {
             this.spawners = [];
             this.wheels = [];
         },
-        handleInput: function (event) {
-            if (event.type === "key") {
-                event.code = utils.getKeyCode(event.code);
-                physics.send(WORKER.INPUT, event);
-            }
-        },
         generateFromSceneData: function (data) {
             // setup the physical world
             physics.loadWorker(WORKER_PATH, this.onmessage);
@@ -65,6 +59,12 @@ define(function (require) {
 
             // load spawn areas
             this.loadSpawnersFromSceneData(this.scene);
+        },
+        handleInput: function (event) {
+            if (event.type === "key") {
+                event.code = utils.getKeyCode(event.code);
+                physics.send(WORKER.INPUT, event);
+            }
         },
         addPlayers: function (inputSources) {
             var i, config;
