@@ -22,9 +22,9 @@ define(function (require) {
         },
         serializeBoxSize: function (obj, array, offset, scale) {
             var size        = obj.geometry.parameters;
-            array[offset]   = size.width / scale;
-            array[offset + 1] = size.height / scale;
-            array[offset + 2] = size.depth / scale;
+            array[offset]   = size.width * obj.scale.x / scale;
+            array[offset + 1] = size.height * obj.scale.y / scale;
+            array[offset + 2] = size.depth * obj.scale.z / scale;
 
             return offset + 3;
         },
