@@ -46,6 +46,10 @@ define(function (require) {
                     this.level.handleInput(event);
                 }
             }
+        },
+        update: function (dt) {
+            this.__update(dt);
+            this.viewport.render(this.level);
         }
     });
 });

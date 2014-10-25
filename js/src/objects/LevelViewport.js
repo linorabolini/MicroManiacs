@@ -10,7 +10,6 @@ define(function (require) {
         // variables
 
         renderer: null,
-        model: null,
 
         // functions
         addToScreen: function () {
@@ -19,7 +18,7 @@ define(function (require) {
         removeFromScreen: function () {
             document.body.removeChild( this.renderer.domElement );
         },
-        startRendering: function (levelModel) {
+        startRendering: function () {
             var scope = this;
 
             // setup renderer
@@ -37,11 +36,6 @@ define(function (require) {
                 scope.renderer.setSize( window.innerWidth, window.innerHeight );
             };
 
-            this.model = levelModel; // set the level to render
-        },
-        update: function (dt) {
-            this.__update(dt);
-            this.render(this.model);
         },
         render: function (model) {
             var canRender = !!model && !!model.scene && !!model.camera;

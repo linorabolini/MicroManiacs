@@ -48,37 +48,56 @@ function startUp(data) {
   setInterval(mainLoop, 1000/FPS);
 }
 
+function readVec3(data, offset) {
+    var o = offset[0];
+    offset[0] = o + 3;
+    return new Ammo.btVector3(data[o], data[o + 1], data[o + 2]);
+}
+
+function readQuaternion(data, offset) {
+    var o = offset[0];
+    offset[0] = o + 4;
+    return new Ammo.btQuaternion(data[o], data[o + 1], data[o + 2], data[o + 3]);
+}
+
+function readSlot(data, offset) {
+    var o = offset[0];
+    offset[0] = o + 1;
+    return data[o];
+}
+
+function readShape(data, offset) {
+  var type = readSlot(data, offset);
+  return geometryReader[type](data, offset);
+}
+
+var geometryReader = {
+  BoxGeometry: function (data, offset) {
+      return new Ammo.btBoxShape(readVec3(data, offset));
+  },
+
+  SphereGeometry: function (data, offset) {
+      return new Ammo.btSphereShape(readSlot(data, offset));
+  }
+};
+
 function addObject(object, offset) {
 
   // default transform
   var startTransform = new Ammo.btTransform();
   startTransform.setIdentity();
 
-  // POSITION
-  startTransform.setOrigin(new Ammo.btVector3(object[0], object[1], object[2]));
+  var offset = [0];
 
-  // ROTATION
-  startTransform.setRotation(new Ammo.btQuaternion(object[3], object[4], object[5], object[6]));
+  // POS AND ROT
+  startTransform.setOrigin(readVec3(object, offset));
+  startTransform.setRotation(readQuaternion(object, offset));
+
+  // SHAPE
+  var shape = readShape(object, offset);
 
   // MASS
-  var mass = object[10]; // default
-
-  // SIZE
-  var half = 0.5;
-  var shape = new Ammo.btBoxShape(new Ammo.btVector3(object[7] * half, object[8] * half, object[9] * half));
-
-  if(offset !== undefined) {
-      var oldshape = shape;
-
-      shape = new Ammo.btCompoundShape();
-
-      var tr = new Ammo.btTransform();
-      tr.setIdentity();
-      tr.setOrigin(new Ammo.btVector3(offset[0], offset[1], offset[2]));
-
-      // localTrans effectively shifts the center of mass with respect to the chassis
-      shape.addChildShape(tr, oldshape);
-  }
+  var mass = object[offset[0]]; // default
 
   // calculate local inertia
   var localInertia = new Ammo.btVector3(0, 0, 0);

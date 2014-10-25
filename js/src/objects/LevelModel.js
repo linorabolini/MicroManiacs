@@ -266,12 +266,9 @@ define(function (require) {
         updateWorldWithSimulationData: function (data) {
             var offset = 0;
 
-            offset = serializer.applySerialData(data, offset, this.bodies, SCALE);
-            offset = serializer.applySerialData(data, offset, this.wheels, SCALE);
+            offset = serializer.applyData(data, offset, this.bodies, SCALE);
+            offset = serializer.applyData(data, offset, this.wheels, SCALE);
 
-        },
-        update: function (dt) {
-            this.__update(dt);
         },
         dispose: function () {
             physics.dispose();
