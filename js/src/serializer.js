@@ -1,9 +1,7 @@
 define(function (require) {
     'use strict';
 
-    var shapes = require('shapes'),
-
-        serializer = {
+    var serializer = {
             serializePosition: function (obj, array, offset, scale) {
                 var origin      = obj.position;
                 array[offset]   = origin.x / scale;
