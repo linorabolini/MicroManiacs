@@ -234,7 +234,6 @@ define(function (require) {
 
                 object = levelObject.children[i];
 
-
                 object.castShadow    = true;
                 object.receiveShadow = true;
 
@@ -250,7 +249,6 @@ define(function (require) {
         },
         createPhysicalObject: function (mesh) {
             var data = serializer.serialize(mesh, SCALE);
-            console.log(data);
             physics.send(WORKER.ADD_OBJECT, data);
         },
         getFreeSpawner: function() {

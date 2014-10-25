@@ -125,7 +125,6 @@ function addObject(data, parent) {
   // calculate local inertia
   var localInertia = new Ammo.btVector3(0, 0, 0);
   shape.calculateLocalInertia(mass, localInertia);
-  console.log(mass);
 
   if(parent) {
     parent.addChildShape(t, shape);
