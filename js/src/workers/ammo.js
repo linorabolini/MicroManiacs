@@ -66,9 +66,14 @@ function readSlot(data, offset) {
     return data[o];
 }
 
-function readShape(data, offset) {
+function readGeometry(data, offset) {
   var type = readSlot(data, offset);
   return geometryReader[type](data, offset);
+}
+
+function readShape(data, offset) {
+  var type = readSlot(data, offset);
+  return shapeReader[type](data, offset);
 }
 
 var geometryReader = {
@@ -81,30 +86,54 @@ var geometryReader = {
   }
 };
 
-function addObject(object, offset) {
+var shapeReader = {
+  Mesh: function (data, offset) {
+      return readGeometry(data, offset);
+  },
 
-  // default transform
-  var startTransform = new Ammo.btTransform();
-  startTransform.setIdentity();
+  Group: function (data, offset) {
+      return new Ammo.btCompoundShape();
+  },
+  Object3D: function (data, offset) {
+      return this.Group(data, offset);
+  }
+};
+
+function addObject(data, parent) {
 
   var offset = [0];
 
-  // POS AND ROT
-  startTransform.setOrigin(readVec3(object, offset));
-  startTransform.setRotation(readQuaternion(object, offset));
+  // default transform
+  var t = new Ammo.btTransform();
 
-  // SHAPE
-  var shape = readShape(object, offset);
+  t.setIdentity();
+  t.setOrigin(readVec3(data, offset));
+  t.setRotation(readQuaternion(data, offset));
+
+  // SHAP
+  var shape = readShape(data, offset);
+  var children = readSlot(data, offset);
+
+  for (var i = 0; i < children.length; i++) {
+    var child = children[i];
+    addObject(child, shape);
+  };
 
   // MASS
-  var mass = object[offset[0]]; // default
+  var mass = data[offset[0]]; // default
 
   // calculate local inertia
   var localInertia = new Ammo.btVector3(0, 0, 0);
   shape.calculateLocalInertia(mass, localInertia);
+  console.log(mass);
+
+  if(parent) {
+    parent.addChildShape(t, shape);
+    return;
+  }
 
   // motion state
-  var myMotionState = new Ammo.btDefaultMotionState(startTransform);
+  var myMotionState = new Ammo.btDefaultMotionState(t);
   var rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
   var body = new Ammo.btRigidBody(rbInfo);
 

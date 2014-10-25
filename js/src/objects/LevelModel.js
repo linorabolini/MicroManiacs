@@ -91,7 +91,7 @@ define(function (require) {
             this.scene.add(chasis);
             this.bodies.push(chasis);
 
-            chasisData = serializer.mesh(chasis, SCALE);
+            chasisData = serializer.serialize(chasis, SCALE);
 
             // wheels
 
@@ -233,6 +233,8 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
 
                 object = levelObject.children[i];
+
+
                 object.castShadow    = true;
                 object.receiveShadow = true;
 
@@ -247,7 +249,8 @@ define(function (require) {
             this.spawners      = spawnersObject.children;
         },
         createPhysicalObject: function (mesh) {
-            var data = serializer.mesh(mesh, SCALE);
+            var data = serializer.serialize(mesh, SCALE);
+            console.log(data);
             physics.send(WORKER.ADD_OBJECT, data);
         },
         getFreeSpawner: function() {
