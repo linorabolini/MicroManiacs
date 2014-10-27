@@ -8,7 +8,7 @@ define(function (require) {
                     return;
                 }
                 var data = { id: id,
-                            value: event.type === "keydown",
+                            value: event.type === "keydown" ? 1 : 0,
                             code: event.keyCode,
                             type: "key"
                         };

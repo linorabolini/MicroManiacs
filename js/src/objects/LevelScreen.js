@@ -39,13 +39,19 @@ define(function (require) {
 
                 switch (event.code) {
                 case 87: // W
-                    // this.level.rotateCamera("z", 20);
+                    this.level.rotateCamera("z", event.value);
                     break;
-                default:
-                    // delegate to level model
-                    this.level.handleInput(event);
+                case 83: // S
+                    this.level.rotateCamera("y", event.value);
+                    break;
+                case 65: // A
+                    this.level.rotateCamera("x", event.value);
+                    break;
                 }
             }
+
+            // delegate to level model
+            this.level.handleInput(event);
         },
         update: function (dt) {
             this.__update(dt);

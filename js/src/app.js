@@ -40,7 +40,7 @@ define(function (require) {
             input.addSource(keyboard.type, window);
         },
         startApp: function () {
-            var screen = new LevelScreen(files.LEVELS[1]);
+            var screen = new LevelScreen(files.LEVELS[0]);
             this.setScreen(screen);
         },
         setScreen: function (newScreen) {

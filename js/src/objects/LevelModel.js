@@ -21,6 +21,11 @@ define(function (require) {
         SCALE               = 80, // + SCALE -> + SPEED
         PERSPECTIVE_CAMERA  = false;
 
+    var rotate              = {x: 0, y: 0, z: 0};
+    var rotateVec           = {x: new THREE.Vector3(1, 0, 0),
+                               y: new THREE.Vector3(0, 1, 0),
+                               z: new THREE.Vector3(0, 0, 1)};
+
     return BaseObject.extend({
 
         // variables
@@ -28,8 +33,10 @@ define(function (require) {
         bodies: null,
         scene: null,
         camera: null,
+        cameraTarget: null,
         spawners: null,
         wheels: null,
+        isRotatingCamera: 0,
 
         // functions
 
@@ -207,6 +214,7 @@ define(function (require) {
 
             this.camera.position.copy(pos.position);
             this.camera.lookAt(target.position);
+            this.cameraTarget = target;
 
         },
         loadLightFromSceneData: function (sceneData) {
@@ -270,6 +278,22 @@ define(function (require) {
             offset = serializer.applyData(data, offset, this.bodies, SCALE);
             offset = serializer.applyData(data, offset, this.wheels, SCALE);
 
+        },
+        rotateCamera: function (axis, value) {
+            rotate[axis] = value;
+            this.isRotatingCamera = rotate["x"] + rotate["y"] + rotate["z"];
+        },
+        update: function (dt) {
+            this.__update(dt);
+
+            // rotate camera 
+            if(this.isRotatingCamera) {
+                var amount = dt * 0.001;
+                this.camera.position.applyAxisAngle(rotateVec["z"], amount * rotate["z"]);
+                this.camera.position.applyAxisAngle(rotateVec["y"], amount * rotate["y"]);
+                this.camera.position.applyAxisAngle(rotateVec["x"], amount * rotate["x"]);
+                this.camera.lookAt(this.cameraTarget.position);
+            }
         },
         dispose: function () {
             physics.dispose();

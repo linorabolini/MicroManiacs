@@ -19,7 +19,7 @@ var bodies = [];
 var vehicles = [];
 var bodiesMap = {};
 
-var keys = [];
+var controls = [];
 
 var ENGINE_FORCE = 150;
 var STEERING = 0.4;
@@ -27,7 +27,7 @@ var BRAKE = 2;
 
 var FPS = 50;
 
-function Keys() {
+function Controls() {
     return {
         "up": false,
         "down": false,
@@ -195,10 +195,9 @@ function createVehicle( data ) {
 
   dynamicsWorld.addVehicle(vehicle);
   vehicles.push(vehicle);
-  keys.push(new Keys());
+  controls.push(new Controls());
 
   return vehicle;
-
 }
 
 function applyEngineForce( force, vehicleId, wheelId ) {
@@ -300,38 +299,38 @@ function readBulletObject( i, data, offset ) {
 
 }
 
-function setVehicleKey (id, code, status) {
-  if ( keys[id][code] !== undefined )
-    keys[id][code] = status;
+function setVehicleControl (id, code, status) {
+  if ( controls[id][code] !== undefined )
+    controls[id][code] = status;
 }
 
-function getVehicleKey (id, code) {
-  return keys[id][code];
+function getVehicleControl (id, code) {
+  return controls[id][code];
 }
 
 function handleInput (input) {
-  setVehicleKey(input.id, input.code, input.value);
+  setVehicleControl(input.id, input.code, input.value);
 }
 
 function updateVehicles () {
 
   for (var i = 0, il = vehicles.length; i < il ; i++) {
 
-    var up = getVehicleKey(i, "up");
-    var down = getVehicleKey(i, "down");
+    var up = getVehicleControl(i, "up");
+    var down = getVehicleControl(i, "down");
     var value = (!!up - !!down);
 
     applyEngineForce(value * ENGINE_FORCE, i, 2);
     applyEngineForce(value * ENGINE_FORCE, i, 3);
 
-    var left = getVehicleKey(i, "left");
-    var right = getVehicleKey(i, "right");
+    var left = getVehicleControl(i, "left");
+    var right = getVehicleControl(i, "right");
     var value = (!!left - !!right);
 
     setSteering(value * STEERING, i, 0);
     setSteering(value * STEERING, i, 1);
 
-    var space = getVehicleKey(i, "space");
+    var space = getVehicleControl(i, "space");
 
     setBrake(BRAKE * !!space, i, 2);    
     setBrake(BRAKE * !!space, i, 3);    
