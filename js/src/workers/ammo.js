@@ -309,7 +309,15 @@ function getVehicleControl (id, code) {
 }
 
 function handleInput (input) {
-  setVehicleControl(input.id, input.code, input.value);
+  if (input.type === 'key'){
+    setVehicleControl(input.id, input.code, input.value);
+  } else if(input.type === 'accelerometer') {
+    var threshold = 20;
+      setVehicleControl(input.id, "up", input.y < threshold ? 1:0);
+      setVehicleControl(input.id, "down", input.y > -threshold? 1:0);
+      setVehicleControl(input.id, "right", input.x < threshold? 1:0);
+      setVehicleControl(input.id, "left", input.x > -threshold? 1:0);
+  }
 }
 
 function updateVehicles () {

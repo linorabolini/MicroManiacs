@@ -1,33 +1,31 @@
 define(function (require) {
     var Model = require('fishbone'),
-        sources       = [],
-        sourceLoaders = [];
+        sources = {},
+        counter = 0;
 
     var Input = Model({
-        addSource: function (type, source, id) {
-            var i, loader;
-            id = id || sources.length;
+        addSource: function (source, id) {
+            var i;
 
-            if (id > sources.length || 0 > id) {
+            id = id || counter;
+
+            if (id > counter || 0 > id) {
                 console.warn("Non used id configured might be overriden");
             }
 
-            for (i = 0; i < sourceLoaders.length; i++) {
-                loader = sourceLoaders[i];
-                if (loader.type === type) {
-                    loader.load(this, source, id);
-                    sources.push({id: id, source: source});
-                    break;
-                }
-            }
+            counter++;
+
+            source.configure(this, id);
+            sources[source.id] = source;
+
+            this.trigger('new source', source);
         },
-        addSourceLoader: function (sourceLoader) {
-            sourceLoaders.push(sourceLoader);
+        getSource: function (name) {
+            return sources[name];
         },
         getSources: function () {
             return sources;
         }
-
     });
 
     return new Input();

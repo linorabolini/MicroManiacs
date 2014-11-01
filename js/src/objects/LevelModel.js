@@ -71,11 +71,13 @@ define(function (require) {
             if (event.type === "key") {
                 event.code = utils.getKeyCode(event.code);
                 physics.send(WORKER.INPUT, event);
+            } else {
+                physics.send(WORKER.INPUT, event);
             }
         },
         addPlayers: function (inputSources) {
             var i, config;
-            for (i = 0; i < inputSources.length; i++) {
+            for (i in inputSources) {
                 config = inputSources[i];
                 this.addPlayer(config);
             }
@@ -84,7 +86,7 @@ define(function (require) {
 
             var spawner     = this.getFreeSpawner(),
                 loader      = new THREE.ObjectLoader(),
-                playerId    = config.id,
+                playerId    = config.sourceId,
                 chasisId    = config.chasisId || 0,
                 wheelId     = config.wheelId || 0,
                 chasis,

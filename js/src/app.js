@@ -5,7 +5,9 @@ define(function (require) {
         LevelScreen = require('LevelScreen'),
         files = require('files'),
         input = require('input'),
-        keyboard = require('keyboard'),
+        KeyboardController = require('keyboard'),
+        MobileController = require('mobile'),
+        server = require('server'),
         APP = null;
     // constants
 
@@ -18,8 +20,11 @@ define(function (require) {
         // functions
 
         setup: function () {
-            this.configureInput();
+            server && this.configureServer();
             this.loadDataFiles();
+
+            // add keyboard source
+            input.addSource(new KeyboardController());
         },
         loadDataFiles: function () {
             var NUM_LEVELS = 2,
@@ -32,12 +37,20 @@ define(function (require) {
             files.loadFiles(DATA_PATH + "/cars/", "chasis", files.CHASIS, NUM_CHASIS);
             files.loadFiles(DATA_PATH + "/cars/", "wheel", files.WHEELS, NUM_WHEELS);
         },
-        configureInput: function () {
-            // add source loaders
-            input.addSourceLoader(keyboard);
+        configureServer: function () {
+            server.emit('register as server');
 
-            // add input sources
-            input.addSource(keyboard.type, window);
+            server.on('client connection', function (source) {
+                console.log('client ' + source.id + ' connected');
+                input.addSource(new MobileController(source));
+            });
+
+            server.on('message', function (msg) {
+                console.log('message from ' + msg.id);
+                var source = input.getSource(msg.id);
+                if(source)
+                    input.getSource(msg.id).emit(msg);
+            });
         },
         startApp: function () {
             var screen = new LevelScreen(files.LEVELS[0]);

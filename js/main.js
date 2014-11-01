@@ -19,6 +19,7 @@ require.config({
 
         // inputs
         'keyboard'      : 'src/inputs/keyboard',
+        'mobile'        : 'src/inputs/mobile',
 
 // upper level
         'serializer'    : 'src/serializer',
@@ -28,6 +29,15 @@ require.config({
         'app'           : 'src/app',
         'files'         : 'src/files'
     }
+});
+
+define('server', [], function() {
+    if (undefined === io) {
+        console.log('Server not found');
+        return false;
+    }
+    
+    return io('http://localhost:3000'); 
 });
 
 require(['app', 'datgui'],

@@ -1,21 +1,32 @@
 define(function (require) {
     'use strict';
-    return {
-        type: "keyboard",
-        load: function (input, source, id) {
+
+    var keyboards = 0;
+
+    return function KeyboardController () {
+        this.configure = function (input, id) {
+            this.id = "keyboard" + id + ':' + keyboards;
+            this.sourceId = id;
+
+            keyboards++;
+
             function keyEvent(event) {
                 if (event.repeat) {
                     return;
                 }
-                var data = { id: id,
-                            value: event.type === "keydown" ? 1 : 0,
-                            code: event.keyCode,
-                            type: "key"
-                        };
+
+                var data = { 
+                    id: id,
+                    value: event.type === "keydown" ? 1 : 0,
+                    code: event.keyCode,
+                    type: "key"
+                };
+
                 input.trigger("input", data);
             }
-            source.addEventListener("keydown", keyEvent);
-            source.addEventListener("keyup", keyEvent);
+
+            window.addEventListener("keydown", keyEvent);
+            window.addEventListener("keyup", keyEvent);
         }
     };
 });
