@@ -115,9 +115,9 @@ define(function (require) {
 
             var ratio   = SCALE  / 10,
                 dx      = 0.9 / ratio,
-                dy      = 0.4 / ratio,
-                dzBack  = 2   / ratio,
-                dzFront = 2   / ratio,
+                dy      = 0 / ratio,
+                dzBack  = 1   / ratio,
+                dzFront = 1   / ratio,
                 radius  = 0.5 / ratio;
 
             var data = {
