@@ -6,10 +6,9 @@ define(function (require) {
         files = require('files'),
         input = require('input'),
         KeyboardController = require('keyboard'),
-        MobileController = require('mobile'),
         server = require('server'),
+        config = require('config'),
         APP = null;
-    // constants
 
     APP = BaseObject.extend({
 
@@ -20,7 +19,7 @@ define(function (require) {
         // functions
 
         setup: function () {
-            server && this.configureServer();
+            server.setup();
             this.loadDataFiles();
 
             // add keyboard source
@@ -36,21 +35,6 @@ define(function (require) {
             files.loadFiles(DATA_PATH + "/levels/", "level", files.LEVELS, NUM_LEVELS);
             files.loadFiles(DATA_PATH + "/cars/", "chasis", files.CHASIS, NUM_CHASIS);
             files.loadFiles(DATA_PATH + "/cars/", "wheel", files.WHEELS, NUM_WHEELS);
-        },
-        configureServer: function () {
-            server.emit('register as server');
-
-            server.on('client connection', function (source) {
-                console.log('client ' + source.id + ' connected');
-                input.addSource(new MobileController(source));
-            });
-
-            server.on('message', function (msg) {
-                console.log('message from ' + msg.id);
-                var source = input.getSource(msg.id);
-                if(source)
-                    input.getSource(msg.id).emit(msg);
-            });
         },
         startApp: function () {
             var screen = new LevelScreen(files.LEVELS[0]);

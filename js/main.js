@@ -22,6 +22,8 @@ require.config({
         'mobile'        : 'src/inputs/mobile',
 
 // upper level
+        'debug'         : 'src/debug',
+        'server'        : 'src/server',
         'serializer'    : 'src/serializer',
         'physics'       : 'src/physics',
         'input'         : 'src/input',
@@ -31,13 +33,22 @@ require.config({
     }
 });
 
-define('server', [], function() {
-    if (undefined === io) {
-        console.log('Server not found');
-        return false;
+define('io', [], function(config) {
+    try {
+        return io;
+    } catch(e) {
+        return false
     }
-    
-    return io('http://localhost:3000'); 
+});
+
+define('config', [], function() {
+    return {
+        server: {
+            name: 'server',
+            host: 'http://localhost:3000'
+        },
+        debug: true
+    }
 });
 
 require(['app', 'datgui'],

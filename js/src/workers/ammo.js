@@ -312,11 +312,11 @@ function handleInput (input) {
   if (input.type === 'key'){
     setVehicleControl(input.id, input.code, input.value);
   } else if(input.type === 'accelerometer') {
-    var threshold = 20;
-      setVehicleControl(input.id, "up", input.y < threshold ? 1:0);
-      setVehicleControl(input.id, "down", input.y > -threshold? 1:0);
-      setVehicleControl(input.id, "right", input.x < threshold? 1:0);
-      setVehicleControl(input.id, "left", input.x > -threshold? 1:0);
+    var x = input.y, y = input.x;
+    setVehicleControl(input.id, "up", y < 0 ? y:0);
+    setVehicleControl(input.id, "down", y > 0 ? -y:0);
+    setVehicleControl(input.id, "right", x < 0 ? -x:0);
+    setVehicleControl(input.id, "left", x > 0 ? x:0);
   }
 }
 
@@ -326,14 +326,14 @@ function updateVehicles () {
 
     var up = getVehicleControl(i, "up");
     var down = getVehicleControl(i, "down");
-    var value = (!!up - !!down);
+    var value = (up - down);
 
     applyEngineForce(value * ENGINE_FORCE, i, 2);
     applyEngineForce(value * ENGINE_FORCE, i, 3);
 
     var left = getVehicleControl(i, "left");
     var right = getVehicleControl(i, "right");
-    var value = (!!left - !!right);
+    var value = (left - right);
 
     setSteering(value * STEERING, i, 0);
     setSteering(value * STEERING, i, 1);
