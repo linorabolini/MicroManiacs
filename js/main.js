@@ -47,6 +47,15 @@ define('config', [], function() {
             name: 'server',
             host: 'http://localhost:3000'
         },
+        worker: {
+            path: './js/src/workers/ammo.js'
+        },
+        level: {
+            scale: 80,
+            camera: {
+                perspective: false
+            }
+        },
         debug: true
     }
 });

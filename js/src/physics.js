@@ -1,14 +1,13 @@
 define(function (require) {
     'use strict';
 
-    var worker;
+    var config = require('config').worker,
+        worker;
 
     return {
-        loadWorker: function (path, messageCallback) {
-            this.dispose();
-            worker  = new Worker(path);
+        onmessage: function (messageCallback) {
+            worker  = new Worker(config.path);
             worker.onmessage = messageCallback;
-            return this;
         },
         send: function (type, data) {
             worker.postMessage({

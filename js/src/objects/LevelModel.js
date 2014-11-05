@@ -5,7 +5,8 @@ define(function (require) {
         files               = require('files'),
         utils               = require('utils'),
         serializer          = require('serializer'),
-        physics             = require('physics');
+        physics             = require('physics'),
+        config              = require('config').level;
 
     //  WORKER SHARED MESSAGES
     var WORKER = {
@@ -14,12 +15,13 @@ define(function (require) {
         ADD_OBJECT          : 2,
         REMOVE_OBJECT       : 3,
         CREATE_CAR          : 4,
-        SIMULATION_DATA     : 5
+        SIMULATION_DATA     : 5,
+        ADD_FORCE           : 6,
+        SET_ATTRIBUTES      : 7
     };
 
-    var WORKER_PATH         = './js/src/workers/ammo.js',
-        SCALE               = 80, // + SCALE -> + SPEED
-        PERSPECTIVE_CAMERA  = false;
+    var SCALE               = config.scale, // + SCALE -> + SPEED
+        PERSPECTIVE_CAMERA  = config.camera.perspective;
 
     var rotate              = {x: 0, y: 0, z: 0};
     var rotateVec           = {x: new THREE.Vector3(1, 0, 0),
@@ -31,11 +33,12 @@ define(function (require) {
         // variables
 
         bodies: null,
+        wheels: null,
+        spawners: null,
+
         scene: null,
         camera: null,
         cameraTarget: null,
-        spawners: null,
-        wheels: null,
         isRotatingCamera: 0,
 
         // functions
@@ -49,23 +52,17 @@ define(function (require) {
         },
         generateFromSceneData: function (data) {
             // setup the physical world
-            physics.loadWorker(WORKER_PATH, this.onmessage);
+            physics.onmessage(this.onmessage);
 
             // create a new scene info from data
             var loader = new THREE.ObjectLoader();
             this.scene = loader.parse(data);
 
-            // load camera
-            this.loadCameraFromSceneData(this.scene);
-
-            // load light
-            this.loadLightFromSceneData(this.scene);
-
-            // load static objects
-            this.loadStaticObjectsFromSceneData(this.scene);
-
-            // load spawn areas
-            this.loadSpawnersFromSceneData(this.scene);
+            // load level
+            this.loadCameraFromSceneData(this.scene)
+                .loadLightFromSceneData(this.scene)
+                .loadStaticObjectsFromSceneData(this.scene)
+                .loadSpawnersFromSceneData(this.scene);
         },
         handleInput: function (event) {
             if (event.type === "key") {
@@ -202,7 +199,6 @@ define(function (require) {
 
         },
         loadCameraFromSceneData: function (sceneData) {
-
             var w           = window.innerWidth,
                 h           = window.innerHeight,
                 cameraData  = sceneData.getObjectByName("CAMERA"),
@@ -218,6 +214,7 @@ define(function (require) {
             this.camera.lookAt(target.position);
             this.cameraTarget = target;
 
+            return this;
         },
         loadLightFromSceneData: function (sceneData) {
 
@@ -232,6 +229,8 @@ define(function (require) {
             light.shadowDarkness    = 0.2;
             light.shadowMapWidth    = window.innerWidth;
             light.shadowMapHeight   = window.innerHeight;
+
+            return this;
 
         },
         loadStaticObjectsFromSceneData: function (sceneData) {
@@ -251,11 +250,15 @@ define(function (require) {
                 this.createPhysicalObject(object);  // physicaly
 
             };
+
+            return this;
         },
         loadSpawnersFromSceneData: function (sceneData) {
             // load objects from SPAWNERS layer
             var spawnersObject = sceneData.getObjectByName("SPAWNERS");
             this.spawners      = spawnersObject.children;
+
+            return this;
         },
         createPhysicalObject: function (mesh) {
             var data = serializer.serialize(mesh, SCALE);
