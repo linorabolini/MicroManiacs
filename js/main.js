@@ -21,6 +21,9 @@ require.config({
         'keyboard'      : 'src/inputs/keyboard',
         'mobile'        : 'src/inputs/mobile',
 
+        // serializers
+        'carSerializer' : 'src/serializers/carSerializer',
+
 // upper level
         'debug'         : 'src/debug',
         'server'        : 'src/server',

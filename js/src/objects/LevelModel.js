@@ -5,6 +5,7 @@ define(function (require) {
         files               = require('files'),
         utils               = require('utils'),
         serializer          = require('serializer'),
+        carSerializer       = require('carSerializer'),
         physics             = require('physics'),
         config              = require('config').level;
 
@@ -81,121 +82,9 @@ define(function (require) {
         },
         addPlayer: function (config) {
 
-            var spawner     = this.getFreeSpawner(),
-                loader      = new THREE.ObjectLoader(),
-                playerId    = config.sourceId,
-                chasisId    = config.chasisId || 0,
-                wheelId     = config.wheelId || 0,
-                chasis,
-                chasisData;
+            var vehicle = this.createVehicle(config);
 
-            chasis = loader.parse(files.CHASIS[chasisId]);
-            chasis.position.copy(spawner.position);
-            chasis.rotation.copy(spawner.rotation);
-            chasis.castShadow = true;
-            chasis.receiveShadow = true;
-            this.scene.add(chasis);
-            this.bodies.push(chasis);
-
-            chasisData = serializer.serialize(chasis, SCALE);
-
-            // wheels
-
-            for (var i = 0; i < 4; i++) {
-
-                var wheel = loader.parse(files.WHEELS[wheelId]);
-
-                this.scene.add(wheel);
-                this.wheels.push(wheel);
-
-            }
-
-            var ratio   = SCALE  / 10,
-                dx      = 0.9 / ratio,
-                dy      = 0 / ratio,
-                dzBack  = 1   / ratio,
-                dzFront = 1   / ratio,
-                radius  = 0.5 / ratio;
-
-            var data = {
-
-                "id" : playerId,
-
-                "chasisData": chasisData,
-
-                "wheels" : [
-
-                    {
-                        "isFrontWheel"  : true,
-                        "mirrored"      : false,
-
-                        "wheelRadius"           : radius,
-                        "suspensionRestLength"  : 0.25 / (ratio),
-
-                        "connectionPoint"   : [ -dx, -dy, dzFront ],
-                        "wheelDirection"    : [ 0, -1, 0 ],
-                        "wheelAxle"         : [ -1, 0, 0 ],
-
-                        "tuning" : {
-                            "rollInfluence" : 0.1,
-                        }
-                    },
-
-                    {
-                        "isFrontWheel"  : true,
-                        "mirrored"      : true,
-
-                        "wheelRadius"           : radius,
-                        "suspensionRestLength"  : 0.25 / (ratio),
-
-                        "connectionPoint"   : [ dx, -dy, dzFront ],
-                        "wheelDirection"    : [ 0, -1, 0 ],
-                        "wheelAxle"         : [ -1, 0, 0 ],
-
-                        "tuning" : {
-                            "rollInfluence" : 0.1,
-                        }
-
-                    },
-
-                    {
-                        "isFrontWheel"  : false,
-                        "mirrored"      : false,
-
-                        "wheelRadius"           : radius,
-                        "suspensionRestLength"  : 0.5 / (ratio),
-
-                        "connectionPoint"   : [ -dx, -dy, -dzBack ],
-                        "wheelDirection"    : [ 0, -1, 0 ],
-                        "wheelAxle"         : [ -1, 0, 0 ]
-
-                    },
-
-                    {
-                        "mirrored"      : true,
-                        "isFrontWheel"  : false,
-
-                        "wheelRadius"           : radius,
-                        "suspensionRestLength"  : 0.5 / (ratio),
-
-                        "connectionPoint"   : [ dx, -dy, -dzBack ],
-                        "wheelDirection"    : [ 0, -1, 0 ],
-                        "wheelAxle"         : [ -1, 0, 0 ]
-                    }
-
-                ],
-
-                "maxSuspensionTravelCm" : 750.0,
-                "maxSuspensionForce"    : 6000.0,
-                "suspensionStiffness"   : 10.0 * ratio,
-                "suspensionCompression" : 20.83,
-                "suspensionDamping"     : 0.88,
-                "rollInfluence"         : 0.1,
-                "frictionSlip"          : 1000
-
-            }
-
-            physics.send(WORKER.CREATE_CAR, data);
+            // TODO: create vehicle object to control the chasis here
 
         },
         loadCameraFromSceneData: function (sceneData) {
@@ -235,20 +124,16 @@ define(function (require) {
         },
         loadStaticObjectsFromSceneData: function (sceneData) {
             // load objects from LEVEL layer
-            var levelObject = sceneData.getObjectByName("LEVEL"),
-                len         = levelObject.children.length,
+            var levelObjects = sceneData.getObjectByName("LEVEL").children.slice(),
                 object;
 
-            for (var i = 0; i < len; i++) {
-
-                object = levelObject.children[i];
-
+            for (var i in levelObjects) {
+                object = levelObjects[i];
                 object.castShadow    = true;
                 object.receiveShadow = true;
 
-                this.bodies.push(object);    // logicaly
+                this.addBodyToScene(object);
                 this.createPhysicalObject(object);  // physicaly
-
             };
 
             return this;
@@ -282,11 +167,59 @@ define(function (require) {
 
             offset = serializer.applyData(data, offset, this.bodies, SCALE);
             offset = serializer.applyData(data, offset, this.wheels, SCALE);
-
         },
         rotateCamera: function (axis, value) {
             rotate[axis] = value;
             this.isRotatingCamera = rotate["x"] + rotate["y"] + rotate["z"];
+        },
+        createVehicle: function (config) {
+            var spawner     = this.getFreeSpawner(), // TODO: move this elsewhere
+                loader      = new THREE.ObjectLoader(),
+                chasisId    = config.chasisId || 0,
+                wheelIds    = config.wheelIds || [0, 0, 0, 0];
+
+            var vehicleData = loader.parse(files.CHASIS[chasisId]);
+
+            // configure chasis 
+
+            var chasis = vehicleData.getObjectByName("CHASIS");
+            chasis.position.copy(spawner.position);
+            chasis.rotation.copy(spawner.rotation);
+            this.addBodyToScene(chasis);
+
+            // load and configure wheels
+
+            var loadWheelModel = function(id) {
+                return loader.parse(files.WHEELS[id]);
+            };
+
+            var wheelModels = wheelIds.map(loadWheelModel);
+            wheelModels.forEach(this.addWheelToScene);
+
+            // load anchors information
+
+            var wheelAnchors = vehicleData.getObjectByName("WHEELS").children;
+
+            // serialize and create physical vehicle
+
+            var serializedVehicle = carSerializer.serialize(chasis, wheelAnchors, wheelModels, SCALE);
+            physics.send(WORKER.CREATE_CAR, serializedVehicle);
+
+            return null; // TODO: create vehicle here ! 
+        },
+        addBodyToScene: function (body) {
+            this.scene.add(body);
+            this.bodies.push(body);
+        },
+        addWheelToScene: function (wheel) {
+            this.scene.add(wheel);
+            this.wheels.push(wheel);
+        },
+        removeBodyFromScene: function (body) {
+            console.error("NOT IMPLEMENTED!");
+        },
+        removeWheelFromScene: function (wheel) {
+            console.error("NOT IMPLEMENTED!");
         },
         update: function (dt) {
             this.__update(dt);
