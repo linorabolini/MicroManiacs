@@ -18,7 +18,7 @@ var bodies = [];
 var vehicles = [];
 var bodiesMap = {};
 
-var controls = [];
+var vehiclesStatus = [];
 
 var DISABLE_DEACTIVATION = 4;
 var ENGINE_FORCE = 150;
@@ -26,16 +26,6 @@ var STEERING = 0.4;
 var BRAKE = 2;
 
 var FPS = 50;
-
-function Controls() {
-    return {
-        "up": false,
-        "down": false,
-        "left": false,
-        "right": false,
-        "space": false
-    };
-}
 
 function startUp(data) {
     // loop
@@ -194,7 +184,7 @@ function createVehicle( data ) {
 
     dynamicsWorld.addVehicle(vehicle);
     vehicles.push(vehicle);
-    controls.push(new Controls());
+    vehiclesStatus.push([0, 0]);
 
     return vehicle;
 }
@@ -298,49 +288,35 @@ function readBulletObject( i, data, offset ) {
 
 }
 
-function setVehicleControl (id, code, status) {
-    if ( controls[id][code] !== undefined )
-        controls[id][code] = status;
-}
-
-function getVehicleControl (id, code) {
-    return controls[id][code];
-}
-
-function handleInput (input) {
-    if (input.type === 'key'){
-        setVehicleControl(input.id, input.code, input.value);
-    } else if(input.type === 'accelerometer') {
-        var x = input.y, y = input.x;
-        setVehicleControl(input.id, "up", y < 0 ? y:0);
-        setVehicleControl(input.id, "down", y > 0 ? -y:0);
-        setVehicleControl(input.id, "right", x < 0 ? -x:0);
-        setVehicleControl(input.id, "left", x > 0 ? x:0);
+function setVehiclesStatus (data) {
+    for (var i = 0, il = data.length; i < il; ++i) {
+        setVehicleStatus(i, data[i]);
     }
+}
+
+function setVehicleStatus (id, status) {
+    vehiclesStatus[id] = status;
+}
+
+function getVehicleStatus (id) {
+    return vehiclesStatus[id];
 }
 
 function updateVehicles () {
 
     for (var i = 0, il = vehicles.length; i < il ; i++) {
 
-        var up = getVehicleControl(i, "up");
-        var down = getVehicleControl(i, "down");
-        var value = (up - down);
+        var status = getVehicleStatus(i);
 
-        applyEngineForce(value * ENGINE_FORCE, i, 2);
-        applyEngineForce(value * ENGINE_FORCE, i, 3);
+        // acceleration
+        var acceleration = status[0];
+        applyEngineForce(acceleration, i, 2);
+        applyEngineForce(acceleration, i, 3);
 
-        var left = getVehicleControl(i, "left");
-        var right = getVehicleControl(i, "right");
-        var value = (left - right);
-
-        setSteering(value * STEERING, i, 0);
-        setSteering(value * STEERING, i, 1);
-
-        var space = getVehicleControl(i, "space");
-
-        setBrake(BRAKE * !!space, i, 2);    
-        setBrake(BRAKE * !!space, i, 3);    
+        //steering
+        var steering = status[1];
+        setSteering(steering, i, 0);
+        setSteering(steering, i, 1);   
 
     };
 
@@ -373,7 +349,7 @@ function update(dt) {
 }
 
 // messages 
-var INPUT = 0,
+var SET_VEHICLE_STATUS = 0,
     START = 1,
     ADD_OBJECT = 2,
     REMOVE_OBJECT = 3,
@@ -391,8 +367,8 @@ onmessage = function(event) {
     } 
 
     switch(type) {
-    case INPUT:
-        handleInput(data);
+    case SET_VEHICLE_STATUS:
+        setVehiclesStatus(data);
         break;
     case CREATE_CAR:
         createVehicle(data);

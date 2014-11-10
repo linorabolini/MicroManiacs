@@ -17,12 +17,15 @@ require.config({
         'LevelScreen'   : 'src/objects/LevelScreen',
         'LevelViewport' : 'src/objects/LevelViewport',
 
+            // vehicles
+            'vehicle'           : 'src/objects/vehicles/vehicle',
+
         // inputs
         'keyboard'      : 'src/inputs/keyboard',
         'mobile'        : 'src/inputs/mobile',
 
         // serializers
-        'carSerializer' : 'src/serializers/carSerializer',
+        'vehicleSerializer' : 'src/serializers/vehicleSerializer',
 
 // upper level
         'debug'         : 'src/debug',

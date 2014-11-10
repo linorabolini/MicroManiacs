@@ -5,20 +5,21 @@ define(function (require) {
         files               = require('files'),
         utils               = require('utils'),
         serializer          = require('serializer'),
-        carSerializer       = require('carSerializer'),
+        vehicleSerializer   = require('vehicleSerializer'),
+        Vehicle             = require('vehicle'),
         physics             = require('physics'),
         config              = require('config').level;
 
     //  WORKER SHARED MESSAGES
     var WORKER = {
-        INPUT               : 0,
+        SET_VEHICLES_STATUS : 0,
         START               : 1,
         ADD_OBJECT          : 2,
         REMOVE_OBJECT       : 3,
         CREATE_CAR          : 4,
         SIMULATION_DATA     : 5,
         ADD_FORCE           : 6,
-        SET_ATTRIBUTES      : 7
+        SET_ATTRIBUTES      : 7,
     };
 
     var SCALE               = config.scale, // + SCALE -> + SPEED
@@ -36,6 +37,7 @@ define(function (require) {
         bodies: null,
         wheels: null,
         spawners: null,
+        vehicles: null,
 
         scene: null,
         camera: null,
@@ -50,6 +52,7 @@ define(function (require) {
             this.bodies = [];
             this.spawners = [];
             this.wheels = [];
+            this.vehicles = [];
         },
         generateFromSceneData: function (data) {
             // setup the physical world
@@ -66,12 +69,9 @@ define(function (require) {
                 .loadSpawnersFromSceneData(this.scene);
         },
         handleInput: function (event) {
-            if (event.type === "key") {
-                event.code = utils.getKeyCode(event.code);
-                physics.send(WORKER.INPUT, event);
-            } else {
-                physics.send(WORKER.INPUT, event);
-            }
+            var id = event.id;
+            var vehicle = this.getVehicle(id);
+            utils.inputToVehicleStatus(vehicle, event);
         },
         addPlayers: function (inputSources) {
             var i, config;
@@ -84,7 +84,10 @@ define(function (require) {
 
             var vehicle = this.createVehicle(config);
 
+            this.setVehicle(config.sourceId, vehicle);
+
             // TODO: create vehicle object to control the chasis here
+            // var player = new Player();
 
         },
         loadCameraFromSceneData: function (sceneData) {
@@ -202,10 +205,11 @@ define(function (require) {
 
             // serialize and create physical vehicle
 
-            var serializedVehicle = carSerializer.serialize(chasis, wheelAnchors, wheelModels, SCALE);
+            var serializedVehicle = vehicleSerializer.serialize(chasis, wheelAnchors, wheelModels, SCALE);
             physics.send(WORKER.CREATE_CAR, serializedVehicle);
 
-            return null; // TODO: create vehicle here ! 
+            var vehicle = new Vehicle(chasis, 150, 0.4);
+            return vehicle; // TODO: create vehicle here ! 
         },
         addBodyToScene: function (body) {
             this.scene.add(body);
@@ -221,6 +225,12 @@ define(function (require) {
         removeWheelFromScene: function (wheel) {
             console.error("NOT IMPLEMENTED!");
         },
+        setVehicle: function (id, value) {
+            this.vehicles[id] = value;
+        },
+        getVehicle: function (id) {
+            return this.vehicles[id];
+        },
         update: function (dt) {
             this.__update(dt);
 
@@ -232,6 +242,14 @@ define(function (require) {
                 this.camera.position.applyAxisAngle(rotateVec["x"], amount * rotate["x"]);
                 this.camera.lookAt(this.cameraTarget.position);
             }
+
+            // updateVehiclesStatus
+
+            var data = []; // TODO: only send info about the vehicles that changed their status
+            for (var i in this.vehicles) {
+                data.push(this.vehicles[i].getStatus());
+            }
+            physics.send(WORKER.SET_VEHICLES_STATUS, data);
         },
         dispose: function () {
             physics.dispose();
@@ -240,6 +258,7 @@ define(function (require) {
             this.camera     = null;
             this.spawners   = null;
             this.wheels     = null;
+            this.vehicles     = null;
 
             this.__dispose();
         }
