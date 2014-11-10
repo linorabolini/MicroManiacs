@@ -19,7 +19,7 @@ define(function (require) {
         CREATE_CAR          : 4,
         SIMULATION_DATA     : 5,
         ADD_FORCE           : 6,
-        SET_ATTRIBUTES      : 7,
+        SET_ATTRIBUTES      : 7
     };
 
     var SCALE               = config.scale, // + SCALE -> + SPEED
