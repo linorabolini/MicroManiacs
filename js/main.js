@@ -18,14 +18,17 @@ require.config({
         'LevelViewport' : 'src/objects/LevelViewport',
 
             // vehicles
-            'vehicle'           : 'src/objects/vehicles/vehicle',
+            'vehicle'                : 'src/objects/vehicles/vehicle',
+            'vehicleStats'           : 'src/objects/vehicles/vehicleStats',
+            'vehicleParts'           : 'src/objects/vehicles/vehicleParts',
+            'vehicleStatus'          : 'src/objects/vehicles/vehicleStatus',
+            'vehicleController'      : 'src/objects/vehicles/vehicleController',
+            'vehicleSerializer'      : 'src/objects/vehicles/vehicleSerializer',
 
         // inputs
         'keyboard'      : 'src/inputs/keyboard',
         'mobile'        : 'src/inputs/mobile',
 
-        // serializers
-        'vehicleSerializer' : 'src/serializers/vehicleSerializer',
 
 // upper level
         'debug'         : 'src/debug',
@@ -51,7 +54,10 @@ define('config', [], function() {
     return {
         server: {
             name: 'server',
-            host: 'http://localhost:3000'
+            host: 'http://localhost:3000',
+            options: {
+                'reconnection': false,
+            }
         },
         worker: {
             path: './js/src/workers/ammo.js'

@@ -39,16 +39,18 @@ define(function (require) {
             //=========================================================
 
             serializePosition: function (obj, array, offset, scale) {
-                var origin      = obj.position;
-                array[offset]   = origin.x / scale;
+                var origin        = obj.position;
+
+                array[offset]     = origin.x / scale;
                 array[offset + 1] = origin.y / scale;
                 array[offset + 2] = origin.z / scale;
 
                 return offset + 3;
             },
             serializeRotation: function (obj, array, offset) {
-                var rotation    = obj.quaternion;
-                array[offset]   = rotation.x;
+                var rotation      = obj.quaternion;
+
+                array[offset]     = rotation.x;
                 array[offset + 1] = rotation.y;
                 array[offset + 2] = rotation.z;
                 array[offset + 3] = rotation.w;
@@ -57,10 +59,12 @@ define(function (require) {
             },
             serializeObjectType: function (obj, array, offset) {
                 array[offset] = obj.type;
+                
                 return offset + 1;
             },
             serializeGeometryType: function (obj, array, offset) {
                 array[offset] = obj.geometry.type;
+
                 return offset + 1;
             },
             serializeGeometry: function (obj, array, offset, scale) {
@@ -127,8 +131,9 @@ define(function (require) {
             //==========================================================
 
             BoxGeometry: function (obj, array, offset, scale) {
-                var size        = obj.geometry.parameters,
-                    half = 0.5;
+                var size          = obj.geometry.parameters,
+                    half          = 0.5;
+
                 array[offset]     = size.width * obj.scale.x / scale * half;
                 array[offset + 1] = size.height * obj.scale.y / scale * half;
                 array[offset + 2] = size.depth * obj.scale.z / scale * half;
@@ -137,7 +142,8 @@ define(function (require) {
             },
             SphereGeometry: function (obj, array, offset, scale) {
                 var radius        = obj.geometry.parameters.radius;
-                array[offset] = radius / scale * obj.scale.x;
+
+                array[offset]     = radius / scale * obj.scale.x;
 
                 return offset + 1;
             },

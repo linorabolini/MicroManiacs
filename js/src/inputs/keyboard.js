@@ -1,32 +1,38 @@
 define(function (require) {
     'use strict';
 
-    var keyboards = 0;
+    var utils = require('utils');
 
-    return function KeyboardController () {
-        this.configure = function (input, id) {
-            this.id = "keyboard" + id + ':' + keyboards;
-            this.sourceId = id;
+    function KeyboardController () {
+        // generate a unique id for this input source
+        this.id = "keyboard" + utils.guid();
+    };
 
-            keyboards++;
+    KeyboardController.prototype.configure = function (input, id) {
 
-            function keyEvent(event) {
-                if (event.repeat) {
-                    return;
-                }
+        //store the internal source id 
+        this.internalSourceId = id;
 
-                var data = { 
-                    id: id,
-                    value: event.type === "keydown" ? 1 : 0,
-                    code: event.keyCode,
-                    type: "key"
-                };
-
-                input.trigger("input", data);
+        // handle the key events and avoid
+        // repeated events
+        function keyEvent(event) {
+            if (event.repeat) {
+                return;
             }
 
-            window.addEventListener("keydown", keyEvent);
-            window.addEventListener("keyup", keyEvent);
+            var data = { 
+                id: id,
+                value: event.type === "keydown" ? 1 : 0,
+                code: event.keyCode,
+                type: "key"
+            };
+
+            input.trigger("input", data);
         }
-    };
+
+        window.addEventListener("keydown", keyEvent);
+        window.addEventListener("keyup", keyEvent);
+    }
+
+    return KeyboardController;
 });

@@ -34,6 +34,26 @@ define(function (require) {
         return code;
     };
 
+    utils.guid = function() {
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+                   .toString(16)
+                   .substring(1);
+      }
+      return function() {
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+               s4() + '-' + s4() + s4() + s4();
+      };
+    }();
+
+    utils.capitalize = function(string) {
+        return string.charAt(0).toUpperCase() + string.substring(1);
+    }
+
+    utils.getSetter = function(string) {
+        return "set" + this.capitalize(string);
+    }
+
     utils.inputToVehicleStatus = function (vehicle, input) {
 
         if (input.type === "key") {

@@ -1,14 +1,27 @@
 define(function (require) {
     'use strict';
 
-    return function MobileController(source) {
-        this.id = source.id;
-        this.configure = function (input, id) {
-            this.sourceId = id;
-            this.emit = function (msg) {
-                msg.id = this.sourceId;
-                input.trigger("input", msg);
-            };
-        };
+    function MobileController(externalSource) {
+        this.id = externalSource.id;
     };
+
+    MobileController.prototype.configure = function (input, id) {
+        
+        // stores the 
+        this.internalSourceId = id;
+
+        this.emit = function (msg) {
+
+            // remaps the message id as the 
+            // source id
+            msg.id = this.internalSourceId;
+
+            // triggers that an input has arrived
+            input.trigger("input", msg);
+
+        };
+
+    };
+
+    return MobileController;
 });

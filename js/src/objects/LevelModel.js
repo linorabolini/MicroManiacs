@@ -5,9 +5,12 @@ define(function (require) {
         files               = require('files'),
         utils               = require('utils'),
         serializer          = require('serializer'),
-        vehicleSerializer   = require('vehicleSerializer'),
         Vehicle             = require('vehicle'),
+        VehicleParts        = require('vehicleParts'),
+        VehicleStats        = require('vehicleStats'),
+        VehicleStatus       = require('vehicleStatus'),
         physics             = require('physics'),
+        _                   = require('underscore'),
         config              = require('config').level;
 
     //  WORKER SHARED MESSAGES
@@ -26,9 +29,11 @@ define(function (require) {
         PERSPECTIVE_CAMERA  = config.camera.perspective;
 
     var rotate              = {x: 0, y: 0, z: 0};
-    var rotateVec           = {x: new THREE.Vector3(1, 0, 0),
-                               y: new THREE.Vector3(0, 1, 0),
-                               z: new THREE.Vector3(0, 0, 1)};
+    var rotateVec = {
+        x: new THREE.Vector3(1, 0, 0),
+        y: new THREE.Vector3(0, 1, 0),
+        z: new THREE.Vector3(0, 0, 1)
+    };
 
     return BaseObject.extend({
 
@@ -49,9 +54,9 @@ define(function (require) {
         init: function () {
             this.__init();
 
-            this.bodies = [];
+            this.bodies   = [];
             this.spawners = [];
-            this.wheels = [];
+            this.wheels   = [];
             this.vehicles = [];
         },
         generateFromSceneData: function (data) {
@@ -69,22 +74,22 @@ define(function (require) {
                 .loadSpawnersFromSceneData(this.scene);
         },
         handleInput: function (event) {
-            var id = event.id;
-            var vehicle = this.getVehicle(id);
-            utils.inputToVehicleStatus(vehicle, event);
+            var vehicle = this.getVehicle(event.id);
+            vehicle.handleInput(event);
         },
         addPlayers: function (inputSources) {
-            var i, config;
-            for (i in inputSources) {
-                config = inputSources[i];
+            _.each(inputSources, function(config) {
                 this.addPlayer(config);
-            }
+            }, this);
         },
         addPlayer: function (config) {
 
-            var vehicle = this.createVehicle(config);
+            var vehicle = this.createVehicle(config),
+                spawner = this.getFreeSpawner();
 
-            this.setVehicle(config.sourceId, vehicle);
+            vehicle.setAs(spawner);
+            this.addVehicleToScene(vehicle);
+            this.setVehicle(config.internalSourceId, vehicle);
 
             // TODO: create vehicle object to control the chasis here
             // var player = new Player();
@@ -131,7 +136,7 @@ define(function (require) {
                 object;
 
             for (var i in levelObjects) {
-                object = levelObjects[i];
+                object               = levelObjects[i];
                 object.castShadow    = true;
                 object.receiveShadow = true;
 
@@ -171,45 +176,44 @@ define(function (require) {
             offset = serializer.applyData(data, offset, this.bodies, SCALE);
             offset = serializer.applyData(data, offset, this.wheels, SCALE);
         },
-        rotateCamera: function (axis, value) {
-            rotate[axis] = value;
-            this.isRotatingCamera = rotate["x"] + rotate["y"] + rotate["z"];
-        },
         createVehicle: function (config) {
-            var spawner     = this.getFreeSpawner(), // TODO: move this elsewhere
-                loader      = new THREE.ObjectLoader(),
+            var loader      = new THREE.ObjectLoader(),
                 chasisId    = config.chasisId || 0,
                 wheelIds    = config.wheelIds || [0, 0, 0, 0];
 
+            // load the 
             var vehicleData = loader.parse(files.CHASIS[chasisId]);
 
-            // configure chasis 
-
+            // configure chasis with the spawner
+            //  position and rotation
             var chasis = vehicleData.getObjectByName("CHASIS");
-            chasis.position.copy(spawner.position);
-            chasis.rotation.copy(spawner.rotation);
-            this.addBodyToScene(chasis);
 
             // load and configure wheels
-
-            var loadWheelModel = function(id) {
+            var wheels = wheelIds.map(function(id) {
                 return loader.parse(files.WHEELS[id]);
-            };
-
-            var wheelModels = wheelIds.map(loadWheelModel);
-            wheelModels.forEach(this.addWheelToScene);
+            });
 
             // load anchors information
+            var anchors = vehicleData.getObjectByName("WHEELS").children;
 
-            var wheelAnchors = vehicleData.getObjectByName("WHEELS").children;
+            // compound vehicle
+            var stats   = new VehicleStats(150, 0.4);
+            var parts   = new VehicleParts(chasis, anchors, wheels);
+            var status  = new VehicleStatus(0, 0);
+            var vehicle = new Vehicle(parts, stats, status);
+
+            return vehicle;
+        },
+        addVehicleToScene: function (vehicle) {
+            var chasis = vehicle.getChasis(),
+                wheels = vehicle.getWheels();
+
+            this.addBodyToScene(chasis);
+            wheels.forEach(this.addWheelToScene);
 
             // serialize and create physical vehicle
-
-            var serializedVehicle = vehicleSerializer.serialize(chasis, wheelAnchors, wheelModels, SCALE);
-            physics.send(WORKER.CREATE_CAR, serializedVehicle);
-
-            var vehicle = new Vehicle(chasis, 150, 0.4);
-            return vehicle; // TODO: create vehicle here ! 
+            var sVehicle = vehicle.serialize(SCALE);
+            physics.send(WORKER.CREATE_CAR, sVehicle);
         },
         addBodyToScene: function (body) {
             this.scene.add(body);
@@ -231,24 +235,27 @@ define(function (require) {
         getVehicle: function (id) {
             return this.vehicles[id];
         },
+        rotateCamera: function (axis, value) {
+            rotate[axis] = value;
+            this.isRotatingCamera = rotate["x"] + rotate["y"] + rotate["z"];
+        },
         update: function (dt) {
             this.__update(dt);
 
             // rotate camera 
             if(this.isRotatingCamera) {
                 var amount = dt * 0.001;
-                this.camera.position.applyAxisAngle(rotateVec["z"], amount * rotate["z"]);
-                this.camera.position.applyAxisAngle(rotateVec["y"], amount * rotate["y"]);
-                this.camera.position.applyAxisAngle(rotateVec["x"], amount * rotate["x"]);
+                var position = this.camera.position;
+                position.applyAxisAngle(rotateVec["z"], amount * rotate["z"]);
+                position.applyAxisAngle(rotateVec["y"], amount * rotate["y"]);
+                position.applyAxisAngle(rotateVec["x"], amount * rotate["x"]);
                 this.camera.lookAt(this.cameraTarget.position);
             }
 
             // updateVehiclesStatus
-
-            var data = []; // TODO: only send info about the vehicles that changed their status
-            for (var i in this.vehicles) {
-                data.push(this.vehicles[i].getStatus());
-            }
+            var data = this.vehicles.map(function(vehicle) {
+                return vehicle.getStatus();
+            });
             physics.send(WORKER.SET_VEHICLES_STATUS, data);
         },
         dispose: function () {
@@ -258,7 +265,7 @@ define(function (require) {
             this.camera     = null;
             this.spawners   = null;
             this.wheels     = null;
-            this.vehicles     = null;
+            this.vehicles   = null;
 
             this.__dispose();
         }
