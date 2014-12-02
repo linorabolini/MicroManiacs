@@ -16,6 +16,7 @@ require.config({
         'LevelModel'    : 'src/objects/LevelModel',
         'LevelScreen'   : 'src/objects/LevelScreen',
         'LevelViewport' : 'src/objects/LevelViewport',
+        'cameraHelper'  : 'src/objects/cameraHelper',
 
             // vehicles
             'vehicle'                : 'src/objects/vehicles/vehicle',

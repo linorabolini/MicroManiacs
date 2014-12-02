@@ -38,13 +38,12 @@ define(function (require) {
 
         },
         render: function (model) {
-            var canRender = !!model && !!model.scene && !!model.camera;
-            if (canRender)
-                this.renderer.render(model.scene, model.camera);
+            this.renderer.render(model.scene, model.getCamera());
         },
         dispose: function() {
             this.__dispose();
             this.removeFromScreen();
+            window.onresize = null;
         }
     });
 });

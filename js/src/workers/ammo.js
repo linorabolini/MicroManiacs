@@ -136,38 +136,38 @@ function createVehicle( data ) {
 
     var vehicleTuning = new Ammo.btVehicleTuning();
     var rollInfluence = ( data.rollInfluence !== undefined ) ? data.rollInfluence : 0.1;
-
-    var chassis = addObject(data.chasisData);
-    var raycaster = new Ammo.btDefaultVehicleRaycaster( dynamicsWorld );
-    var vehicle = new Ammo.btRaycastVehicle( vehicleTuning, chassis, raycaster );
+    
+    var chassis       = addObject(data.chasisData);
+    var raycaster     = new Ammo.btDefaultVehicleRaycaster( dynamicsWorld );
+    var vehicle       = new Ammo.btRaycastVehicle( vehicleTuning, chassis, raycaster );
 
     chassis.setActivationState( DISABLE_DEACTIVATION );
     vehicle.setCoordinateSystem( 0, 1, 2 ); // right, up, forward
 
-    var suspensionStiffness = ( data.suspensionStiffness !== undefined ) ? data.suspensionStiffness : 5.88;
+    var suspensionStiffness   = ( data.suspensionStiffness !== undefined ) ? data.suspensionStiffness : 5.88;
     var suspensionCompression = ( data.suspensionCompression !== undefined ) ? data.suspensionCompression: 0.83;
-    var suspensionDamping = ( data.suspensionDamping !== undefined ) ? data.suspensionDamping : 0.88;
+    var suspensionDamping     = ( data.suspensionDamping !== undefined ) ? data.suspensionDamping : 0.88;
     var maxSuspensionTravelCm = ( data.maxSuspensionTravelCm !== undefined ) ? data.maxSuspensionTravelCm : 500.0;
-    var frictionSlip = ( data.frictionSlip !== undefined ) ? data.frictionSlip : 10.5;
-    var maxSuspensionForce = ( data.maxSuspensionForce !== undefined ) ? data.maxSuspensionForce : 6000.0;
+    var frictionSlip          = ( data.frictionSlip !== undefined ) ? data.frictionSlip : 10.5;
+    var maxSuspensionForce    = ( data.maxSuspensionForce !== undefined ) ? data.maxSuspensionForce : 6000.0;
 
     for ( var i = 0, il = data.wheels.length; i < il; i ++ ) {
 
-        var wheel = data.wheels[ i ];
-
-        var connection = wheel.connectionPoint;
-        var direction = wheel.wheelDirection;
-        var axle = wheel.wheelAxle;
-
+        var wheel                = data.wheels[ i ];
+        
+        var connection           = wheel.connectionPoint;
+        var direction            = wheel.wheelDirection;
+        var axle                 = wheel.wheelAxle;
+        
         var suspensionRestLength = wheel.suspensionRestLength;
-        var wheelRadius = wheel.wheelRadius;
-        var isFrontWheel = wheel.isFrontWheel;
-
-        var tuning = vehicleTuning;
+        var wheelRadius          = wheel.wheelRadius;
+        var isFrontWheel         = wheel.isFrontWheel;
+        
+        var tuning               = vehicleTuning;
 
         var connectionPointCS0 = new Ammo.btVector3( connection[ 0 ], connection[ 1 ], connection[ 2 ] );
-        var wheelDirectionCS0 = new Ammo.btVector3( direction[ 0 ], direction[ 1 ], direction[ 2 ] );
-        var wheelAxleCS = new Ammo.btVector3( axle[ 0 ], axle[ 1 ], axle[ 2 ] );
+        var wheelDirectionCS0  = new Ammo.btVector3( direction[ 0 ], direction[ 1 ], direction[ 2 ] );
+        var wheelAxleCS        = new Ammo.btVector3( axle[ 0 ], axle[ 1 ], axle[ 2 ] );
 
         vehicle.addWheel( connectionPointCS0, wheelDirectionCS0, wheelAxleCS,
                   suspensionRestLength, wheelRadius, tuning, isFrontWheel );
@@ -230,9 +230,9 @@ function readBulletVehicle( i, data, offset ) {
 
         vehicle.updateWheelTransform( j, true );
         var transform = vehicle.getWheelTransformWS( j );
-
-        var origin = transform.getOrigin();
-        var rotation = transform.getRotation();
+        
+        var origin    = transform.getOrigin();
+        var rotation  = transform.getRotation();
 
         data[ offset ]     = origin.x();
         data[ offset + 1 ] = origin.y();
@@ -253,8 +253,8 @@ function readBulletVehicle( i, data, offset ) {
 
 function readBulletVehicleSpeed( i, data, offset ) {
 
-    var vehicle = vehicles[ i ];
-    var speed = vehicle.getCurrentSpeedKmHour();
+    var vehicle    = vehicles[ i ];
+    var speed      = vehicle.getCurrentSpeedKmHour();
     data[ offset ] = speed;
 
     offset += 1;
@@ -267,10 +267,10 @@ var tmpTransform = new Ammo.btTransform(); // taking this out of readBulletObjec
 
 function readBulletObject( i, data, offset ) {
 
-    var body = bodies[ i ];
+    var body     = bodies[ i ];
     body.getMotionState().getWorldTransform( tmpTransform );
-
-    var origin = tmpTransform.getOrigin();
+    
+    var origin   = tmpTransform.getOrigin();
     var rotation = tmpTransform.getRotation();
 
     data[ offset ]     = origin.x();
@@ -302,21 +302,42 @@ function getVehicleStatus (id) {
     return vehiclesStatus[id];
 }
 
+var tmpvec = new Ammo.btVector3(0, 0, 0);
+var tmpvecZero = new Ammo.btVector3(0, 0, 0);
+
 function updateVehicles () {
 
-    for (var i = 0, il = vehicles.length; i < il ; i++) {
+    for (var i = 0, il = vehicles.length; i < il; i++) {
 
         var status = getVehicleStatus(i);
 
-        // acceleration
+        var vehicle   = vehicles[i];
+        var body      = vehicle.getRigidBody();
+        var transform = body.getCenterOfMassTransform();
+        var rotation  = transform.getRotation();
+        var axis      = rotation.getAxis();
+        var angle     = rotation.getAngle();
+
         var acceleration = status[0];
+        var steering     = status[1];
+        var localForceX  = status[2];
+        var localForceY  = status[3];
+        var localForceZ  = status[4];
+
+        // acceleration
         applyEngineForce(acceleration, i, 2);
         applyEngineForce(acceleration, i, 3);
 
-        //steering
-        var steering = status[1];
+        // steering
         setSteering(steering, i, 0);
-        setSteering(steering, i, 1);   
+        setSteering(steering, i, 1);
+
+        // forces
+        tmpvec.setValue(localForceX, localForceY, localForceZ);
+        if(tmpvec.length2() !== 0) {
+            tmpvec = tmpvec.rotate(axis, angle);
+            body.applyForce(tmpvec, tmpvecZero);
+        }
 
     };
 
@@ -349,17 +370,18 @@ function update(dt) {
 }
 
 // messages 
-var SET_VEHICLE_STATUS = 0,
-    START = 1,
-    ADD_OBJECT = 2,
-    REMOVE_OBJECT = 3,
-    CREATE_CAR = 4,
-    SIMULATION_DATA = 5;
+var SET_VEHICLE_STATUS     = 0,
+    START                  = 1,
+    ADD_OBJECT             = 2,
+    REMOVE_OBJECT          = 3,
+    CREATE_CAR             = 4,
+    SIMULATION_DATA        = 5;
 
 onmessage = function(event) {
     var message = event.data;
-    var data = message.data;
-    var type = message.type;
+    var data    = message.data;
+    var type    = message.type;
+
     if(undefined === type) {
         console.error("message without type arrived");
         console.error(data);
@@ -378,7 +400,7 @@ onmessage = function(event) {
         break;
     case REMOVE_OBJECT:
         removeObject(data);
-         break;
+        break;
     default:
         postMessage("message arrived");
   }

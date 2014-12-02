@@ -33,6 +33,7 @@ define(function (require) {
 
             input.on('input', this.handleInput);
             input.on('new source', this.level.addPlayer);
+
         },
         handleInput: function (event) {
             if (event.type === "key") {

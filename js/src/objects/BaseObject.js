@@ -40,6 +40,8 @@ define(function (require) {
 
             this.children = [];
             this.isDisposed = true;
+
+            this.parent && this.parent.removeChild(this);
         },
         update: function (dt) {
             var i;

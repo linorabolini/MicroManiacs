@@ -11,29 +11,22 @@ define(function (require) {
         VehicleStatus       = require('vehicleStatus'),
         physics             = require('physics'),
         _                   = require('underscore'),
+        CameraHelper        = require('cameraHelper'),
         config              = require('config').level;
 
     //  WORKER SHARED MESSAGES
     var WORKER = {
-        SET_VEHICLES_STATUS : 0,
-        START               : 1,
-        ADD_OBJECT          : 2,
-        REMOVE_OBJECT       : 3,
-        CREATE_CAR          : 4,
-        SIMULATION_DATA     : 5,
-        ADD_FORCE           : 6,
-        SET_ATTRIBUTES      : 7
+        SET_VEHICLES_STATUS : 0, // message to update vehicles status
+        START               : 1, // deprecated
+        ADD_OBJECT          : 2, // message to create a body
+        REMOVE_OBJECT       : 3, // not implemented
+        CREATE_CAR          : 4, // message to create cars
+        SIMULATION_DATA     : 5, // callback with physics information
+        ADD_FORCE           : 6, // not implemented
+        SET_ATTRIBUTES      : 7  // not implemented
     };
 
-    var SCALE               = config.scale, // + SCALE -> + SPEED
-        PERSPECTIVE_CAMERA  = config.camera.perspective;
-
-    var rotate              = {x: 0, y: 0, z: 0};
-    var rotateVec = {
-        x: new THREE.Vector3(1, 0, 0),
-        y: new THREE.Vector3(0, 1, 0),
-        z: new THREE.Vector3(0, 0, 1)
-    };
+    var SCALE = config.scale; // + SCALE -> + SPEED
 
     return BaseObject.extend({
 
@@ -43,11 +36,9 @@ define(function (require) {
         wheels: null,
         spawners: null,
         vehicles: null,
-
         scene: null,
-        camera: null,
-        cameraTarget: null,
-        isRotatingCamera: 0,
+        cameraHelper: null,
+        
 
         // functions
 
@@ -96,22 +87,16 @@ define(function (require) {
 
         },
         loadCameraFromSceneData: function (sceneData) {
-            var w           = window.innerWidth,
-                h           = window.innerHeight,
-                cameraData  = sceneData.getObjectByName("CAMERA"),
-                pos         = cameraData.getObjectByName("POSITION"),
-                target      = cameraData.getObjectByName("TARGET");
-
-            if (PERSPECTIVE_CAMERA)
-                this.camera = new THREE.PerspectiveCamera(70, w / h, 1, 1500);
-            else
-                this.camera = new THREE.OrthographicCamera(-w/2, w/2, h/2, -h/2, 1, 1500);
-
-            this.camera.position.copy(pos.position);
-            this.camera.lookAt(target.position);
-            this.cameraTarget = target;
+            this.cameraHelper = new CameraHelper(sceneData, config.camera);
+            this.addChild(this.cameraHelper);
 
             return this;
+        },
+        getCamera: function () {
+            return this.cameraHelper.camera;
+        },
+        getCameraTarget: function () {
+            return this.cameraHelper.target;
         },
         loadLightFromSceneData: function (sceneData) {
 
@@ -197,9 +182,9 @@ define(function (require) {
             var anchors = vehicleData.getObjectByName("WHEELS").children;
 
             // compound vehicle
-            var stats   = new VehicleStats(150, 0.4);
             var parts   = new VehicleParts(chasis, anchors, wheels);
-            var status  = new VehicleStatus(0, 0);
+            var stats   = new VehicleStats(150, 0.4);
+            var status  = new VehicleStatus();
             var vehicle = new Vehicle(parts, stats, status);
 
             return vehicle;
@@ -223,6 +208,9 @@ define(function (require) {
             this.scene.add(wheel);
             this.wheels.push(wheel);
         },
+        removeVehicleFromScene: function (vehicle) {
+            console.error("NOT IMPLEMENTED!");
+        },
         removeBodyFromScene: function (body) {
             console.error("NOT IMPLEMENTED!");
         },
@@ -236,21 +224,10 @@ define(function (require) {
             return this.vehicles[id];
         },
         rotateCamera: function (axis, value) {
-            rotate[axis] = value;
-            this.isRotatingCamera = rotate["x"] + rotate["y"] + rotate["z"];
+            this.cameraHelper.rotateCamera(axis, value);
         },
         update: function (dt) {
             this.__update(dt);
-
-            // rotate camera 
-            if(this.isRotatingCamera) {
-                var amount = dt * 0.001;
-                var position = this.camera.position;
-                position.applyAxisAngle(rotateVec["z"], amount * rotate["z"]);
-                position.applyAxisAngle(rotateVec["y"], amount * rotate["y"]);
-                position.applyAxisAngle(rotateVec["x"], amount * rotate["x"]);
-                this.camera.lookAt(this.cameraTarget.position);
-            }
 
             // updateVehiclesStatus
             var data = this.vehicles.map(function(vehicle) {
@@ -262,7 +239,6 @@ define(function (require) {
             physics.dispose();
             this.bodies     = null;
             this.scene      = null;
-            this.camera     = null;
             this.spawners   = null;
             this.wheels     = null;
             this.vehicles   = null;

@@ -1,30 +1,42 @@
 define(function (require) {
 
-    var ACCELERATION = 0,
-        STEERING     = 1;
+    var _ = require('underscore');
 
-    function VehicleStatus (initialAcceleration, initialSteering) {
-        this.raw = [
-            initialAcceleration,
-            initialSteering
-        ];
+    // we create a temp array to setup the properties
+    // that will be exposed to the car physics engine
+    var props = [
+        "Acceleration",
+        "Steering",
+        "LocalForceX",
+        "LocalForceY",
+        "LocalForceZ"
+    ];
+
+    // we setup the raw data of the vehicle with
+    // and fill it with zeros for each variable
+    function VehicleStatus () {
+
+        // it is important to initialize the raw data
+        // so it can be accessible from the setters 
+        // and getters
+        this.raw = props.map(function() {
+            return 0.0; 
+        });
     }
 
-    VehicleStatus.prototype.getAcceleration = function () {
-        return this.raw[ACCELERATION];
-    }
+    // generate setters and getters dinamically
+    _.each(props, function (el, indx) {
 
-    VehicleStatus.prototype.getSteering = function () {
-        return this.raw[STEERING];
-    }
+        // we create the setter
+        VehicleStatus.prototype["set" + el] = function (value) {
+            this.raw[indx] = value;
+        }
 
-    VehicleStatus.prototype.setAcceleration = function (value) {
-        this.raw[ACCELERATION] = value;
-    }
-
-    VehicleStatus.prototype.setSteering = function (value) {
-        this.raw[STEERING] = value;
-    }
+        // we create the getter
+        VehicleStatus.prototype["get" + el] = function () {
+            return this.raw[indx];
+        }
+    });
 
     VehicleStatus.prototype.dispose = function () {
         this.raw = null;
