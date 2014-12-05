@@ -10,36 +10,36 @@ require.config({
         'fishbone'      : 'libs/fishbone',
         'three'         : 'libs/three.min',
 
-    //src
+    //engine
         // objects
-        'BaseObject'    : 'src/objects/BaseObject',
-        'LevelModel'    : 'src/objects/LevelModel',
-        'LevelScreen'   : 'src/objects/LevelScreen',
-        'LevelViewport' : 'src/objects/LevelViewport',
-        'cameraHelper'  : 'src/objects/cameraHelper',
+        'BaseObject'    : 'engine/objects/BaseObject',
+        'LevelModel'    : 'engine/objects/LevelModel',
+        'LevelScreen'   : 'engine/objects/LevelScreen',
+        'LevelViewport' : 'engine/objects/LevelViewport',
+        'cameraHelper'  : 'engine/objects/cameraHelper',
 
             // vehicles
-            'vehicle'                : 'src/objects/vehicles/vehicle',
-            'vehicleStats'           : 'src/objects/vehicles/vehicleStats',
-            'vehicleParts'           : 'src/objects/vehicles/vehicleParts',
-            'vehicleStatus'          : 'src/objects/vehicles/vehicleStatus',
-            'vehicleController'      : 'src/objects/vehicles/vehicleController',
-            'vehicleSerializer'      : 'src/objects/vehicles/vehicleSerializer',
+            'vehicle'                : 'engine/objects/vehicles/vehicle',
+            'vehicleStats'           : 'engine/objects/vehicles/vehicleStats',
+            'vehicleParts'           : 'engine/objects/vehicles/vehicleParts',
+            'vehicleStatus'          : 'engine/objects/vehicles/vehicleStatus',
+            'vehicleController'      : 'engine/objects/vehicles/vehicleController',
+            'vehicleSerializer'      : 'engine/objects/vehicles/vehicleSerializer',
 
         // inputs
-        'keyboard'      : 'src/inputs/keyboard',
-        'mobile'        : 'src/inputs/mobile',
+        'keyboard'      : 'engine/inputs/keyboard',
+        'mobile'        : 'engine/inputs/mobile',
 
 
 // upper level
-        'debug'         : 'src/debug',
-        'server'        : 'src/server',
-        'serializer'    : 'src/serializer',
-        'physics'       : 'src/physics',
-        'input'         : 'src/input',
-        'utils'         : 'src/utils',
-        'app'           : 'src/app',
-        'files'         : 'src/files'
+        'debug'         : 'engine/debug',
+        'server'        : 'engine/server',
+        'serializer'    : 'engine/serializer',
+        'physics'       : 'engine/physics',
+        'input'         : 'engine/input',
+        'utils'         : 'engine/utils',
+        'app'           : 'engine/app',
+        'files'         : 'engine/files'
     }
 });
 
@@ -61,7 +61,7 @@ define('config', [], function() {
             }
         },
         worker: {
-            path: './js/src/workers/ammo.js'
+            path: './js/engine/workers/ammo.js'
         },
         level: {
             scale: 80,

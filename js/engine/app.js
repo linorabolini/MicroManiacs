@@ -32,12 +32,12 @@ define(function (require) {
                 DATA_PATH = "js/data/";
 
             files.onLoaded(this.startApp);
-            files.loadFiles(DATA_PATH + "/levels/", "level", files.LEVELS, NUM_LEVELS);
-            files.loadFiles(DATA_PATH + "/cars/", "chasis", files.CHASIS, NUM_CHASIS);
-            files.loadFiles(DATA_PATH + "/cars/", "wheel", files.WHEELS, NUM_WHEELS);
+            files.loadFiles(DATA_PATH + "/levels/", "level", NUM_LEVELS);
+            files.loadFiles(DATA_PATH + "/chasis/", "chasis", NUM_CHASIS);
+            files.loadFiles(DATA_PATH + "/wheels/", "wheel", NUM_WHEELS);
         },
         startApp: function () {
-            var screen = new LevelScreen(files.LEVELS[0]);
+            var screen = new LevelScreen(files.get("level", 0));
             this.setScreen(screen);
         },
         setScreen: function (newScreen) {

@@ -167,7 +167,7 @@ define(function (require) {
                 wheelIds    = config.wheelIds || [0, 0, 0, 0];
 
             // load the 
-            var vehicleData = loader.parse(files.CHASIS[chasisId]);
+            var vehicleData = loader.parse(files.get("chasis", chasisId));
 
             // configure chasis with the spawner
             //  position and rotation
@@ -175,7 +175,7 @@ define(function (require) {
 
             // load and configure wheels
             var wheels = wheelIds.map(function(id) {
-                return loader.parse(files.WHEELS[id]);
+                return loader.parse(files.get("wheel", id));
             });
 
             // load anchors information
