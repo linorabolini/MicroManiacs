@@ -7,7 +7,7 @@ Introduction
 As ammo.js is implemented using a web worker, a python simple server is needed
 to run the game because of security matters.
 
-Last release: http://linorabolini.github.io/
+Last release: http://linorabolini.github.io/micromaniacs/index.html
 
 Licence
 -------
